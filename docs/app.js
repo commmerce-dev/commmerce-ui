@@ -530,8 +530,8 @@ pages['/start/install'] = () => ({ title: 'Install and frameworks', html: `
   ${codeBlock(setupCode('<cm-button variant="primary">Save</cm-button>'))}
   ${h2('Choosing a version')}
   ${table(['Address', 'Changes when', 'Use it for'], [
-    `<tr><td><code>…/ui@${PREVIEW.version}/dist/cdn.js</code><br><code>…/tokens@${PREVIEW.version}/dist/tokens.css</code></td><td>Never. Each release gets a new number.</td><td>Apps merchants use. Upgrade by changing the number after reading the <a href="#/releases">release notes</a>.</td></tr>`,
-    `<tr><td><code>${PREVIEW.hostedJs}</code><br><code>${PREVIEW.hostedCss}</code></td><td>Never.</td><td>The same files on commmerce.com, if your site may only load scripts from Commmerce (a strict Content-Security-Policy).</td></tr>`,
+    `<tr><td><code>${PREVIEW.js}</code><br><code>${PREVIEW.css}</code></td><td>Never. Each release gets a new number.</td><td>Apps merchants use. Upgrade by changing the number after reading the <a href="#/releases">release notes</a>.</td></tr>`,
+    `<tr><td><code>${PREVIEW.jsdelivrJs}</code><br><code>${PREVIEW.jsdelivrCss}</code></td><td>Never.</td><td>The same release from the npm packages on jsDelivr, if you prefer a public CDN.</td></tr>`,
     `<tr><td><code>…/commmerceui/vendor/cdn.js</code><br><code>…/commmerceui/vendor/tokens.css</code></td><td>Every release.</td><td>Prototypes, and checking an upcoming release.</td></tr>`,
   ])}
   ${h2('React')}

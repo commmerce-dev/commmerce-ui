@@ -16,23 +16,25 @@ const HOST = 'https://commmerce.com/commmerceui';
 // 1.0.0 and later are stable; a pre-release suffix (1.0.0-rc.4) means preview. The docs' preview wording follows this,
 // so releasing 1.0.0 needs only the version bump and its release note.
 export const STABLE = !VERSION.includes('-');
-// Snippets load the published npm packages from jsDelivr (a public CDN, exact versions never change).
-// The same files stay on our own HOST (hosted*) for sites that may only load from commmerce.com.
-const CDN = 'https://cdn.jsdelivr.net/npm/@commmerce';
+// Snippets load the hosted build from cdn.commmerce.com (Cloudflare Worker commmerceui-proxy, route
+// cdn.commmerce.com/commmerceui/*; same files as HOST). /v/<version>/ never changes once published.
+// jsDelivr serves the npm packages as a mirror (jsdelivr*).
+const CDN = `https://cdn.commmerce.com/commmerceui/v/${VERSION}`;
+const NPM_CDN = 'https://cdn.jsdelivr.net/npm/@commmerce';
 export const PREVIEW = {
   version: VERSION,
-  css: `${CDN}/tokens@${VERSION}/dist/tokens.css`,
-  js: `${CDN}/ui@${VERSION}/dist/cdn.js`,
-  font: `${CDN}/tokens@${VERSION}/dist/fonts.css`,
-  bridge: `${CDN}/app-bridge@${VERSION}/dist/app-bridge.js`,
-  hostedCss: `${HOST}/v/${VERSION}/tokens.css`,
-  hostedJs: `${HOST}/v/${VERSION}/cdn.js`,
+  css: `${CDN}/tokens.css`,
+  js: `${CDN}/cdn.js`,
+  font: `${CDN}/fonts.css`,
+  bridge: `${CDN}/app-bridge.js`,
+  jsdelivrCss: `${NPM_CDN}/tokens@${VERSION}/dist/tokens.css`,
+  jsdelivrJs: `${NPM_CDN}/ui@${VERSION}/dist/cdn.js`,
   latestCss: `${HOST}/vendor/tokens.css`,
   latestJs: `${HOST}/vendor/cdn.js`,
 };
 
 export const packages = [
-  { name: `Hosted build v${VERSION}`, status: 'ready', what: 'One stylesheet (tokens), one ES module that registers every ready component, and `app-bridge.js` for apps embedded in the admin. Loads from any website, from the jsDelivr CDN or from commmerce.com. A pinned version never changes; `/vendor/` on commmerce.com always serves the latest release.' },
+  { name: `Hosted build v${VERSION}`, status: 'ready', what: 'One stylesheet (tokens), one ES module that registers every ready component, and `app-bridge.js` for apps embedded in the admin. Loads from any website, from cdn.commmerce.com (or jsDelivr as a mirror). A pinned version never changes; `/vendor/` always serves the latest release.' },
   { name: '@commmerce/tokens', status: 'ready', what: 'Colours, type, spacing, radii and shadows as CSS variables (`--cm-*`), JSON and typed JS, plus `fonts.css` for the Poppins typeface. On npm: `npm install @commmerce/tokens`.' },
   { name: '@commmerce/ui', status: 'ready', what: 'The web components as an npm package. On npm: `npm install @commmerce/ui`.' },
   { name: '@commmerce/ui-react', status: 'ready', what: 'React components generated from the web components, with typed props and events. Tested with React 18 and React 19 (every wrapper\'s props and events) in Chromium, Firefox and WebKit. On npm: `npm install @commmerce/ui-react`.' },

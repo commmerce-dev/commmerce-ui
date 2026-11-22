@@ -10,7 +10,7 @@ Docs: https://commmerce.com/commmerceui/#apps--app-bridge
 ```js
 import { createApp } from '@commmerce/app-bridge';
 // or, without a build step, pinned to a version:
-// import { createApp } from 'https://cdn.jsdelivr.net/npm/@commmerce/app-bridge@<version>/dist/app-bridge.js';
+// import { createApp } from 'https://cdn.commmerce.com/commmerceui/v/<version>/app-bridge.js';
 
 // ADMIN_ORIGIN, from your app settings (render it into the page from your server): 'https://*.commmerce.com'
 // (any Commmerce admin on a subdomain; recommended) or one exact origin.

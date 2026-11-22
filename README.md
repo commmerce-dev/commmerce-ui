@@ -21,9 +21,9 @@ there, never edit generated output.
 ### Plain HTML, PHP, EJS, Vue, anything
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@commmerce/tokens@VERSION/dist/fonts.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@commmerce/tokens@VERSION/dist/tokens.css">
-<script type="module" src="https://cdn.jsdelivr.net/npm/@commmerce/ui@VERSION/dist/cdn.js"></script>
+<link rel="stylesheet" href="https://cdn.commmerce.com/commmerceui/v/VERSION/fonts.css">
+<link rel="stylesheet" href="https://cdn.commmerce.com/commmerceui/v/VERSION/tokens.css">
+<script type="module" src="https://cdn.commmerce.com/commmerceui/v/VERSION/cdn.js"></script>
 
 <form>
   <cm-text-field name="title" label="Title" required></cm-text-field>
