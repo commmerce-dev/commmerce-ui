@@ -1,5 +1,5 @@
 // Cloudflare Worker "commmerceui-proxy" (commmerce.com zone).
-// Routes: commmerce.com/commmerceui  and  commmerce.com/commmerceui/*
+// Routes: commmerce.com/commmerceui, commmerce.com/commmerceui/* and cdn.commmerce.com/commmerceui/* (added 22 Nov 2026)
 // Serves the docs at commmerce.com/commmerceui/ from the blog server, which keeps serving them at
 // /blog/commmerceui/ (nginx `location ^~ /blog/commmerceui/`). Same pattern as the blog-proxy Worker.
 // Paste this file into the Worker in the Cloudflare dashboard; this copy is the record of what runs there.
