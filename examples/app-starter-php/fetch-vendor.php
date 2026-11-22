@@ -4,7 +4,7 @@
 //   php fetch-vendor.php            (or COMMMERCE_UI_VERSION=1.20.2 php fetch-vendor.php)
 
 $version = getenv('COMMMERCE_UI_VERSION') ?: '1.20.2';
-$base = "https://commmerce.com/commmerceui/v/$version";
+$base = "https://cdn.commmerce.com/commmerceui/v/$version";
 @mkdir(__DIR__ . '/vendor');
 $download = function (string $file) use ($base, $version): string {
     $bytes = @file_get_contents("$base/$file");

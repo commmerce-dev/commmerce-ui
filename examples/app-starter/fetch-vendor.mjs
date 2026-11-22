@@ -3,7 +3,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 
 const VERSION = process.env.COMMMERCE_UI_VERSION || '1.20.2';
-const BASE = `https://commmerce.com/commmerceui/v/${VERSION}`;
+const BASE = `https://cdn.commmerce.com/commmerceui/v/${VERSION}`;
 await mkdir(new URL('./vendor/', import.meta.url), { recursive: true });
 const download = async (file) => {
   const res = await fetch(`${BASE}/${file}`);
