@@ -526,11 +526,12 @@ pages['/start/install'] = () => ({ title: 'Install and frameworks', html: `
   ${h2('Framework support')}
   ${table(['Setup', 'Status', 'Notes'], FRAMEWORKS.map(([a, s, n]) => `<tr><td>${a}</td><td>${s === 'ready' ? badge('ready') : `<cm-badge>Not tested</cm-badge>`}</td><td>${linkifyText(n)}</td></tr>`))}
   ${h2('Plain HTML and server-rendered pages')}
-  <p>Add the two lines to your page's <code>&lt;head&gt;</code>, then use any <code>&lt;cm-*&gt;</code> element in your markup.</p>
+  <p>Add the three lines to your page's <code>&lt;head&gt;</code>, then use any <code>&lt;cm-*&gt;</code> element in your markup.</p>
   ${codeBlock(setupCode('<cm-button variant="primary">Save</cm-button>'))}
   ${h2('Choosing a version')}
   ${table(['Address', 'Changes when', 'Use it for'], [
-    `<tr><td><code>…/commmerceui/v/${PREVIEW.version}/cdn.js</code><br><code>…/commmerceui/v/${PREVIEW.version}/tokens.css</code></td><td>Never. Each release gets a new number.</td><td>Apps merchants use. Upgrade by changing the number after reading the <a href="#/releases">release notes</a>.</td></tr>`,
+    `<tr><td><code>…/ui@${PREVIEW.version}/dist/cdn.js</code><br><code>…/tokens@${PREVIEW.version}/dist/tokens.css</code></td><td>Never. Each release gets a new number.</td><td>Apps merchants use. Upgrade by changing the number after reading the <a href="#/releases">release notes</a>.</td></tr>`,
+    `<tr><td><code>${PREVIEW.hostedJs}</code><br><code>${PREVIEW.hostedCss}</code></td><td>Never.</td><td>The same files on commmerce.com, if your site may only load scripts from Commmerce (a strict Content-Security-Policy).</td></tr>`,
     `<tr><td><code>…/commmerceui/vendor/cdn.js</code><br><code>…/commmerceui/vendor/tokens.css</code></td><td>Every release.</td><td>Prototypes, and checking an upcoming release.</td></tr>`,
   ])}
   ${h2('React')}
