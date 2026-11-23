@@ -6,8 +6,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        This issue is public. Don't include customer data, personal data, API keys or private screenshots.
-        For private matters email support@commmerce.com.
+        **This issue is public.** Private is the default: to share your work privately, use `npx @commmerce/review`
+        (docs: "Review with your agent", https://commmerce.com/commmerceui/#apps--review) or email ui@commmerce.com.
+        Here, don't include customer data, personal data, API keys or screenshots of unreleased work.
   - type: input
     id: product
     attributes:

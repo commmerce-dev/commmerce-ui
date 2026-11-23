@@ -1,13 +1,14 @@
-name: Refinement to an existing component
-description: "An existing component almost fits: a missing option, state, size or behaviour."
-title: "[refinement] "
-labels: [triage, refinement]
+name: Question
+description: How do I do something with Commmerce UI?
+title: "[question] "
+labels: [triage]
 body:
   - type: markdown
     attributes:
       value: |
-        This issue is public. Don't include customer data, personal data, API keys or private screenshots.
-        For private matters email support@commmerce.com.
+        **This issue is public.** Private is the default: to share your work privately, use `npx @commmerce/review`
+        (docs: "Review with your agent", https://commmerce.com/commmerceui/#apps--review) or email ui@commmerce.com.
+        Here, don't include customer data, personal data, API keys or screenshots of unreleased work.
   - type: input
     id: product
     attributes:
@@ -33,11 +34,11 @@ body:
       placeholder: 1.20.2
     validations:
       required: true
-  - type: input
-    id: component
+  - type: textarea
+    id: question
     attributes:
-      label: Component
-      placeholder: cm-select
+      label: Question
+      description: What are you trying to do? What did you try?
     validations:
       required: true
   - type: input
@@ -57,22 +58,3 @@ body:
     attributes:
       label: Screenshots
       description: Drag images here. Hide any real customer or personal data first.
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected
-      description: What you expected to happen.
-    validations:
-      required: true
-  - type: textarea
-    id: actual
-    attributes:
-      label: Actual
-      description: What happened instead. Include the markup or code if you can.
-    validations:
-      required: true
-  - type: textarea
-    id: workaround
-    attributes:
-      label: Workaround
-      description: Anything you are doing to get around it for now.
