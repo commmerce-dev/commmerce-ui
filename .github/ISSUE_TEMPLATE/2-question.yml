@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         **This issue is public.** Private is the default: to share your work privately, use `npx @commmerce/review`
-        (docs: "Review with your agent", https://commmerce.com/commmerceui/#apps--review) or email ui@commmerce.com.
+        or the private feedback form (https://commmerce.com/commmerceui/#apps--review).
         Here, don't include customer data, personal data, API keys or screenshots of unreleased work.
   - type: input
     id: product

@@ -1,13 +1,13 @@
 # Private is the default (owner, 23 Nov 2026): teams don't show their work until it is ready. The private routes come
-# first; the two public forms below are for people who choose to report a library bug or ask a question in public.
+# first (the private review route and the private feedback form); the two public forms below are for people who choose to report a library bug or ask a question in public.
 blank_issues_enabled: false
 contact_links:
   - name: Share your build privately for review (recommended)
     url: https://commmerce.com/commmerceui/#apps--review
     about: Private by default. Run `npx @commmerce/review` or let your coding agent use it ("Review with your agent" in the docs). Only the Commmerce UI team sees it.
-  - name: Email UI feedback privately
-    url: mailto:ui@commmerce.com
-    about: Private by default. Bugs, component requests, refinements or questions by email to ui@commmerce.com.
+  - name: Send feedback privately
+    url: https://commmerce.com/commmerceui/#apps--review
+    about: Private by default. Bugs, component requests, improvements or questions through the private form. Only the Commmerce UI team sees it.
   - name: Email support
     url: mailto:support@commmerce.com
     about: General Commmerce support, or commercial questions.
