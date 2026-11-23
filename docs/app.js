@@ -189,6 +189,8 @@ const SECTIONS = [
     { path: '/apps/app-bridge', title: 'App Bridge' },
     { path: '/apps/starter', title: 'Starter app' },
     { path: '/apps/review-checklist', title: 'Marketplace review checklist' },
+    { path: '/apps/review', title: 'Review with your agent' },
+    { path: '/apps/feedback', title: 'Send feedback' },
   ] },
   { id: 'components', title: 'Components', pages: [{ path: '/components', title: 'All components' },
     ...orderedComponents.map((c) => ({ path: `/components/${c.slug}`, title: c.name, group: c.group })),
@@ -1516,6 +1518,292 @@ const REACT_STARTER_FILES = [
   ['tests/app.spec.js', 'Browser tests: renders, tabs filter, search empty state, bulk action toast, form validation.'],
   ['.gitignore', 'Keeps `node_modules/` and `dist/` out of git.'],
 ];
+// Private feedback (FEEDBACK.md in the internal repo): "Send feedback" (/apps/feedback) is the one way to send things
+// by hand, and "Review with your agent" (/apps/review) sets up agents and the command line. The form posts to the review
+// service's public endpoints (/commmerceui/api/v1/public/reviews and /public/feedback: no key, honeypot, per-IP rate
+// limit). If spam shows up, the next step is Cloudflare Turnstile on this form (an owner dashboard action).
+const FEEDBACK_HREF = '#/apps/feedback';
+const REVIEW_MCP_URL = 'https://commmerce.com/commmerceui/api/mcp';
+// Same-origin on commmerce.com/commmerceui/ and blog.commmerce.com/blog/commmerceui/; elsewhere (local docs) the public address.
+const reviewApi = () => {
+  if (window.COMMMERCE_REVIEW_API) return window.COMMMERCE_REVIEW_API;
+  const i = location.pathname.indexOf('/commmerceui/');
+  return i >= 0 ? `${location.pathname.slice(0, i)}/commmerceui/api/v1` : 'https://commmerce.com/commmerceui/api/v1';
+};
+const PRIVATE_NOTE = note(`<strong>Private by default.</strong> What you send is seen only by Commmerce (and your team, if you use your team's key). It is never published. Replies come back only to you: on your private status link, or through your agent (<code>get_review</code>). Screenshots and source files are deleted 30 days after the item is done. Send demo data only. Public <a href="https://github.com/commmerce-dev/commmerce-ui/issues">GitHub issues</a> are optional, only if you want to report a library bug in public.`);
+const ITEM_STATUS = { queued: ['Received', 'information'], reviewing: ['In progress', 'attention'], done: ['Done', 'success'], 'needs-owner': ['Waiting for Commmerce', 'attention'], failed: ['Could not finish', 'critical'] };
+const VERDICT = { approved: 'Approved', 'changes-needed': 'Changes needed', 'needs-component': 'Needs a component' };
+const SEVERITY_TONE = { blocker: 'critical', major: 'attention', minor: 'information', nit: 'neutral' };
+const ITEM_TYPE = { review: 'Build review', 'component-request': 'Component request', bug: 'Bug report', refinement: 'Improvement', question: 'Question' };
+// Only commmerce.com links from a reply are shown as links.
+const safeDocs = (u) => /^https:\/\/(commmerce\.com|cdn\.commmerce\.com)\//.test(u ?? '') ? u : null;
+
+function itemStatusHtml(r) {
+  const [label, tone] = ITEM_STATUS[r.status] ?? [r.status, 'neutral'];
+  const findings = r.findings ?? [];
+  const what = ITEM_TYPE[r.type === 'feedback' ? r.kind : r.type] ?? 'Feedback';
+  return `<div class="rv-status-head"><cm-badge tone="${tone}">${esc(label)}</cm-badge>${r.verdict ? ` <strong>${esc(VERDICT[r.verdict] ?? r.verdict)}</strong>` : ''}
+      <span class="muted small">${esc(what)}${r.title || r.name ? `: ${esc(r.title || r.name)}` : ''} · ${esc(r.app ?? '')} · ${esc(r.id)} · updated ${esc(new Date(r.updated_at).toLocaleString())}</span></div>
+    ${r.impression ? `<p><strong>${esc(r.impression)}</strong></p>` : ''}
+    ${r.summary ? `<p>${esc(r.summary)}</p>` : ''}
+    ${r.top3?.length ? `<h3>Change these first</h3><ol>${r.top3.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
+    ${r.proposed?.some((p) => p.image) ? `<h3>Proposed</h3><div class="rv-proposed">${r.proposed.filter((p) => p.image).map((p) => `<figure><img alt="Proposed ${esc(p.name)}${p.width ? ` at ${esc(p.width)}px` : ''}" src="data:image/png;base64,${String(p.image).replace(/[^A-Za-z0-9+/=]/g, '')}"><figcaption>${esc(p.name)}${p.width ? ` · ${esc(p.width)}px` : ''}</figcaption></figure>`).join('')}</div>` : ''}
+    ${!r.summary && !r.reply && r.status !== 'done' ? '<p class="muted">No answer yet. This page checks again every minute while it is open; you also get one email when it is done.</p>' : ''}
+    ${findings.length ? `<ol class="rv-findings">${findings.map((f) => `<li><p><cm-badge tone="${SEVERITY_TONE[f.severity] ?? 'neutral'}">${esc(f.severity)}</cm-badge> <strong>${esc(f.screen)}</strong> at ${esc(f.width)}px: <code>${esc(f.element)}</code></p>
+      <p>${esc(f.problem)}</p><p><strong>Fix:</strong> ${esc(f.fix)}</p>${f.snippet ? `<pre><code>${esc(f.snippet)}</code></pre>` : ''}${safeDocs(f.docs_url) ? `<p><a href="${esc(f.docs_url)}">Docs${f.component ? `: ${esc(f.component)}` : ''}</a></p>` : ''}</li>`).join('')}</ol>` : ''}
+    ${r.reply ? `<p class="rv-reply">${esc(r.reply)}</p>` : ''}`;
+}
+
+// The form's types and which boxes each shows. A field: [name, types, required-for types, markup].
+const FB_TYPES = [
+  ['review', 'Review my build', 'Screens you built with Commmerce UI: we send back findings with the fix for each.'],
+  ['bug', 'Bug in Commmerce UI', 'A component does something wrong.'],
+  ['component-request', 'Request a component', 'Commmerce UI has no component for something your screens need.'],
+  ['refinement', 'Improve an existing component', 'A component is missing an option or could work better.'],
+  ['question', 'Question', 'How to do something with Commmerce UI.'],
+];
+const tf = (name, label, extra = '') => `<cm-text-field name="${name}" label="${label}" ${extra}></cm-text-field>`;
+const FB_FIELDS = [
+  ['title', 'bug,component-request,refinement,question', 'bug,component-request,refinement,question', tf('title', 'Short title', 'help-text="For example: Select clips its menu at 320px."')],
+  ['url', 'review', '', tf('url', 'URL of your build', 'type="url" placeholder="https://" help-text="Optional if you add screenshots. We open it only if it is reachable from the internet."')],
+  ['questions', 'review', '', tf('questions', 'What should we look at?', 'multiline rows="3" help-text="Optional. For example: is the orders table right on phones?"')],
+  ['component', 'bug,refinement', 'refinement', tf('component', 'Component', 'placeholder="cm-select" help-text="The tag or name, if you know it."')],
+  ['version', 'bug', '', tf('version', 'Commmerce UI version', 'placeholder="1.20.2"')],
+  ['steps', 'bug', 'bug', tf('steps', 'Steps to reproduce', 'multiline rows="4"')],
+  ['expected', 'bug', '', tf('expected', 'What you expected', 'multiline rows="2"')],
+  ['actual', 'bug', '', tf('actual', 'What happened instead', 'multiline rows="2"')],
+  ['job', 'component-request', 'component-request', tf('job', 'The job it does', 'multiline rows="3" help-text="What the merchant does with it, not how it looks."')],
+  ['where', 'component-request', '', tf('where', 'Where it is used', 'multiline rows="2" help-text="Which screens or flows need it."')],
+  ['reference', 'component-request', '', tf('reference', 'Reference', 'help-text="A link to something similar, or add a screenshot below."')],
+  ['workaround', 'component-request', '', tf('workaround', 'What you do today', 'multiline rows="2"')],
+  ['missing', 'refinement', 'refinement', tf('missing', 'What is missing or should change', 'multiline rows="4"')],
+  ['question', 'question', 'question', tf('question', 'Your question', 'multiline rows="4"')],
+];
+const FB_LABELS = Object.fromEntries(FB_FIELDS.map(([n, , , m]) => [n, /label="([^"]+)"/.exec(m)[1]]));
+
+const feedbackForm = `<form id="fb-form" class="rv-form" novalidate>
+    <cm-radio-group name="type" label="What are you sending?" required>
+      ${FB_TYPES.map(([v, l, d], i) => `<cm-radio value="${v}" label="${l}" description="${d}"${i === 0 ? ' checked' : ''}></cm-radio>`).join('\n      ')}
+    </cm-radio-group>
+    ${FB_FIELDS.map(([, types, req, m]) => `<div class="fb-field" data-types="${types}" data-required="${req}">${m}</div>`).join('\n    ')}
+    <cm-file-upload name="screens" label="Screenshots" accept="image/png,image/jpeg,image/webp" multiple max-files="12" max-size="4194304" hint="Up to 12 PNG, JPEG or WebP images, 4 MB each."></cm-file-upload>
+    <cm-text-field name="name" label="Your name" autocomplete="name" required></cm-text-field>
+    <cm-text-field name="email" type="email" label="Email" autocomplete="email" required help-text="We send one email to this address when there is an answer, with your private link. Nothing else."></cm-text-field>
+    <cm-text-field name="app" label="Team or app" required help-text="For example: Connect team, or your app's name."></cm-text-field>
+    <cm-radio-group name="submitter_kind" label="You are building" required>
+      <cm-radio value="internal" label="A Commmerce product (internal team)"></cm-radio>
+      <cm-radio value="third-party" label="An app for the Commmerce admin (third-party developer)"></cm-radio>
+    </cm-radio-group>
+    <cm-text-field name="key" label="Review key (optional)" autocomplete="off" help-text="If Commmerce gave your team a key, add it: what you send is then shared with your team."></cm-text-field>
+    <div class="rv-hp" aria-hidden="true" inert><label>Leave this empty <input name="website" tabindex="-1" autocomplete="off"></label></div>
+    <cm-checkbox name="demo" required label="Screenshots and pages show demo data only" description="No real customer names, emails, phone numbers or addresses."></cm-checkbox>
+    <div id="fb-turnstile" class="fb-turnstile"></div>
+    <div id="fb-result" role="status"></div>
+    <div><cm-button id="fb-send" type="submit" variant="primary">Send privately</cm-button></div>
+  </form>`;
+
+pages['/apps/feedback'] = (params) => ({ title: 'Send feedback', html: `
+  <h1>Send feedback</h1>
+  <p class="lead">Everything you send is private. Ask for a review of what you built, report a bug, request a component, suggest an improvement or ask a question: Commmerce answers you on a private link.</p>
+  ${PRIVATE_NOTE}
+  ${params.get('id') && params.get('t') ? `${h2('Your answer', 'status')}<div id="fb-status" class="rv-status" aria-live="polite"><p class="muted">Loading…</p></div>
+  <p class="muted small">This link is private: anyone with it can see this item, so share it only with your team.</p>` : ''}
+  ${h2('Send it', 'form')}
+  <p>No account or key needed. Keep the private link the form gives you. Using a coding agent? It can send reviews and feedback itself: <a href="#/apps/review">Review with your agent</a>.</p>
+  ${feedbackForm}
+  ${h2('What happens next', 'next')}
+  <ul>
+    <li>Commmerce reads everything (with the help of Claude, working only on what you sent) and answers on your private link. You get one email when there is an answer.</li>
+    <li>A build review comes back as findings: each names the screen and width, the severity, the problem, and the fix the Commmerce UI way (which <code>cm-*</code> component and attributes), with a docs link.</li>
+    <li>Bugs are fixed in a following release; requests and improvements shape what Commmerce UI adds next. Anything published about them describes the need in general terms, with our own example: never your name, your product or your screens.</li>
+    <li>Screenshots are deleted 30 days after the item is done. Your email is used only to tell you there is an answer.</li>
+    <li>General support, not about Commmerce UI: ${mail()}.</li>
+  </ul>`,
+  after(main) {
+    const form = $('#fb-form', main);
+    const result = $('#fb-result', main);
+    const send = $('#fb-send', main);
+    const api = reviewApi();
+    const show = (tone, html) => { result.innerHTML = `<cm-banner tone="${tone}">${html}</cm-banner>`; };
+    const typeGroup = $('cm-radio-group[name="type"]', form);
+    const type = () => typeGroup.value || 'review';
+    // Show the boxes the chosen type needs; only shown boxes can be required.
+    const adapt = () => {
+      const t = type();
+      form.querySelectorAll('.fb-field').forEach((w) => {
+        const on = w.dataset.types.split(',').includes(t);
+        w.hidden = !on;
+        const field = w.firstElementChild;
+        field.required = on && w.dataset.required.split(',').includes(t);
+        field.disabled = !on;
+      });
+      send.textContent = t === 'review' ? 'Send for review' : 'Send privately';
+    };
+    typeGroup.addEventListener('change', adapt);
+    adapt();
+    // Cloudflare Turnstile (anti-spam) when the review service has it on: GET /public/config names the site key.
+    // Loaded only on this page, rendered explicitly, managed mode; its token goes with the submission.
+    let challenge = null;
+    // Only where the API is same-origin (commmerce.com, blog.commmerce.com): elsewhere the browser blocks it anyway.
+    (api.startsWith('/') ? fetch(`${api}/public/config`) : Promise.reject(new Error('cross-origin'))).then((r) => (r.ok ? r.json() : {})).then((cfg) => {
+      if (!cfg.turnstile || !form.isConnected) return;
+      const render = () => {
+        const box = $('#fb-turnstile', main);
+        if (!box || !window.turnstile) return;
+        challenge = window.turnstile.render(box, { sitekey: cfg.turnstile.site_key, action: cfg.turnstile.action, theme: 'auto', size: innerWidth < 360 ? 'compact' : 'flexible' });
+      };
+      if (window.turnstile) { render(); return; }
+      const sc = document.createElement('script');
+      sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      sc.async = true;
+      sc.addEventListener('load', render);
+      document.head.append(sc);
+    }).catch(() => { /* no config: the service decides */ });
+    const readImage = (file) => new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.addEventListener('load', async () => {
+        let width;
+        try { const bmp = await createImageBitmap(file); width = bmp.width; bmp.close?.(); } catch { /* unknown width */ }
+        resolve({ name: file.name.replace(/\.[^.]+$/, '').slice(0, 80) || 'screen', ...(width >= 200 && width <= 5000 ? { width } : {}), image: String(fr.result).replace(/^data:[^,]*,/, '') });
+      });
+      fr.addEventListener('error', () => reject(new Error(`Could not read ${file.name}`)));
+      fr.readAsDataURL(file);
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      result.innerHTML = '';
+      const data = new FormData(form);
+      const files = [...($('cm-file-upload', form).files ?? [])];
+      const val = (k) => String(data.get(k) ?? '').trim();
+      const t = type();
+      if (!form.checkValidity()) { form.reportValidity(); show('critical', 'Fill in the required fields.'); return; }
+      if (t === 'review' && !val('url') && !files.length) { show('critical', 'Add the URL of your build or at least one screenshot.'); return; }
+      if (files.length > 12) { show('critical', 'Add at most 12 screenshots.'); return; }
+      const turnstileToken = challenge !== null ? window.turnstile.getResponse(challenge) : undefined;
+      if (challenge !== null && !turnstileToken) { show('critical', 'Wait for the anti-spam check above to finish, then send again.'); return; }
+      send.loading = true;
+      try {
+        const images = await Promise.all(files.map(readImage));
+        const common = { name: val('name'), email: val('email'), app: val('app'), submitter_kind: val('submitter_kind'), key: val('key') || undefined, website: val('website') || undefined, turnstile_token: turnstileToken };
+        let path, body;
+        if (t === 'review') {
+          path = 'public/reviews';
+          body = { ...common, url: val('url') || undefined, questions: val('questions') || undefined, screens: images };
+        } else {
+          // The type's own boxes go as `fields`; `body` is the same text in one piece for people reading it.
+          const shown = FB_FIELDS.filter(([n, types]) => n !== 'title' && types.split(',').includes(t)).map(([n]) => n);
+          const fields = Object.fromEntries(shown.map((n) => [n, val(n)]).filter(([, v]) => v));
+          path = 'public/feedback';
+          body = { ...common, kind: t, title: val('title'), body: shown.filter((n) => fields[n]).map((n) => `${FB_LABELS[n]}:\n${fields[n]}`).join('\n\n') || val('title'), fields, images };
+        }
+        const res = await fetch(`${api}/${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error?.message ?? `The service answered ${res.status}.`);
+        form.hidden = true;
+        result.remove();
+        form.insertAdjacentHTML('afterend', `<div id="fb-sent" role="status"><cm-banner tone="success" heading="Sent privately">Keep this private link to see the answer (we also email it to you when there is one):
+          <p class="rv-link"><a href="${esc(out.status_url)}">${esc(out.status_url)}</a></p></cm-banner></div>`);
+      } catch (err) {
+        show('critical', esc(err instanceof TypeError ? 'Could not reach Commmerce. Check your connection and try again.' : err.message));
+        if (challenge !== null) window.turnstile.reset(challenge); // a token is good for one submission
+      } finally {
+        send.loading = false;
+      }
+    });
+    // The private status link: #apps--feedback?id=…&t=…
+    const id = params.get('id'), token = params.get('t');
+    const box = $('#fb-status', main);
+    if (box && id && token) {
+      const load = async () => {
+        if (!box.isConnected) return;
+        try {
+          const res = await fetch(`${api}/public/items/${encodeURIComponent(id)}`, { headers: { 'x-status-token': token } });
+          const r = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(r.error?.message ?? `The service answered ${res.status}.`);
+          box.innerHTML = itemStatusHtml(r);
+          if (r.poll_after_s) setTimeout(load, r.poll_after_s * 1000);
+        } catch (err) {
+          box.innerHTML = `<cm-banner tone="critical">${esc(err instanceof TypeError ? 'Could not reach Commmerce. Try again later.' : err.message)}</cm-banner>`;
+        }
+      };
+      load();
+    }
+  } });
+
+pages['/apps/review'] = () => ({ title: 'Review with your agent', html: `
+  <h1>Review with your agent</h1>
+  <p class="lead">Everything you send is private. Set up your coding agent (Claude Code, Codex, ChatGPT) with one command: it looks Commmerce UI components up before building, checks your pages, and sends screens to Commmerce for review. Findings come back to your agent: what to change, the Commmerce UI way, with links to the docs.</p>
+  ${PRIVATE_NOTE}
+  <p>No agent? Use the <a href="${FEEDBACK_HREF}">feedback form</a>: it sends build reviews, bug reports, component requests, improvements and questions, privately.</p>
+  ${h2('Set up in one command', 'setup')}
+  <p>Add the Commmerce review server to Claude Code. No key, no install:</p>
+  ${codeBlock([{ label: 'Terminal', lang: 'sh', code: `claude mcp add --transport http commmerce-review ${REVIEW_MCP_URL}` }])}
+  <p>Without a key your agent can already look components up (<code>search_components</code>, <code>get_component</code>). To check pages and send reviews, ask it for a key:</p>
+  ${codeBlock([{ label: 'Ask Claude', lang: 'sh', code: 'Get me a Commmerce UI review key. My email is asha@yourcompany.com, team "Orders app".' }])}
+  <p>Commmerce emails the key to that address with the one command that adds it; the key is never shown in the chat. Remove the keyless server first, then run the command from the email:</p>
+  ${codeBlock([{ label: 'Terminal', lang: 'sh', code: `claude mcp remove commmerce-review
+claude mcp add --transport http commmerce-review ${REVIEW_MCP_URL} --header "Authorization: Bearer cmr_…"` }])}
+  ${h2('About keys', 'key')}
+  <ul>
+    <li>Work addresses at commmerce.com or outdoinc.com get an internal key for the team you name, so your team's reviews stay together. Any other address gets a third-party key for your company (on personal mail such as Gmail, for you alone), with 10 submissions a day.</li>
+    <li>Use a work address that receives mail: disposable addresses are refused. You can ask 3 times a day; asking again for the same team replaces a key not yet sent.</li>
+    <li>Without an agent: <code>npx @commmerce/review key request --email you@company.com --name "Your name" --team "Your team"</code>.</li>
+    <li>Keep the key secret, like a password. Looking up components and checking a page on your machine need no key.</li>
+  </ul>
+  ${note('The <code>@commmerce/review</code> package (command line and the local MCP server below) is published to npm with the next Commmerce UI release. Until then, use the remote server above or the feedback form.')}
+  ${h2('Claude Code with the local server', 'claude-code')}
+  <p>The local server also checks pages on your machine (localhost works) and takes screenshots for reviews. It needs Node 18 or later and Playwright.</p>
+  ${codeBlock([{ label: 'Terminal', lang: 'sh', code: `claude mcp add commmerce-review --env COMMMERCE_REVIEW_KEY=cmr_your_key -- npx -y @commmerce/review mcp` }])}
+  ${h2('Codex', 'codex')}
+  <p>Add the server to <code>~/.codex/config.toml</code> (leave out <code>env</code> until you have a key; then ask Codex to request one):</p>
+  ${codeBlock([{ label: '~/.codex/config.toml', lang: 'sh', code: `[mcp_servers.commmerce-review]
+command = "npx"
+args = ["-y", "@commmerce/review", "mcp"]
+env = { COMMMERCE_REVIEW_KEY = "cmr_your_key" }` }])}
+  ${h2('ChatGPT', 'chatgpt')}
+  <p>Where your ChatGPT plan lets you add a custom MCP connector, add <code>${REVIEW_MCP_URL}</code>. Without a key it can look components up and request a key. To send reviews it needs the header <code>Authorization: Bearer cmr_your_key</code>; the server doesn't offer OAuth sign-in yet, so if your connector settings only offer OAuth, use the command line or the <a href="${FEEDBACK_HREF}">feedback form</a>.</p>
+  ${h2('What your agent can do', 'tools')}
+  ${table(['Tool', 'What it does'], [
+    ['<code>request_key</code>', 'Asks Commmerce to email you a key (works without one).'],
+    ['<code>search_components</code>', 'Finds components for what a screen needs ("orders table with bulk actions").'],
+    ['<code>get_component</code>', 'The full reference for one component: attributes, slots, events, examples, do and don\'t, docs link.'],
+    ['<code>check_page</code>', 'Checks a running page on your machine (localhost works): Commmerce UI present and version, accessibility (axe-core), sideways scroll at 320, 390, 768 and 1280px, text under 12px, targets under 24px, native controls where a <code>cm-*</code> component exists. Nothing is sent.'],
+    ['<code>submit_review</code>', 'Takes screenshots at 390, 768 and 1280px on your machine and sends them privately for review. It stops if emails or phone numbers are visible.'],
+    ['<code>get_review</code>', 'The status and findings of something you sent.'],
+    ['<code>request_component</code>', 'Asks for a component Commmerce UI doesn\'t have yet.'],
+    ['<code>send_feedback</code>', 'Reports a bug, suggests a refinement or asks a question, privately.'],
+  ].map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`))}
+  ${h2('Command line', 'cli')}
+  <p>Node 18 or later. <code>check</code> and <code>submit</code> open your page in Chromium through Playwright: add it to your project with <code>npm install --save-dev playwright</code> and <code>npx playwright install chromium</code>.</p>
+  ${codeBlock([{ label: 'Terminal', lang: 'sh', code: `# Check a page locally: no key, nothing is sent
+npx @commmerce/review check http://localhost:5173/orders
+
+# Send screens for review (screenshots at 390, 768 and 1280px), then wait for the result
+export COMMMERCE_REVIEW_KEY=cmr_your_key
+npx @commmerce/review submit http://localhost:5173 --app "Orders app" \\
+  --screen orders=/orders --screen order=/orders/1001 --question "Is the table right on phones?"
+npx @commmerce/review wait rv_abc123
+
+# Or send image files
+npx @commmerce/review submit --images orders@390=orders-phone.png orders@1280=orders.png --app "Orders app"
+
+# Ask for a component, or send feedback
+npx @commmerce/review request-component --name "Kanban swimlanes" --need "Group board columns by owner" --app "CRM"
+npx @commmerce/review feedback --kind bug --title "Select clips at 320px" --body "Steps: …"` }])}
+  <p><code>submit</code> warns when it sees emails or phone numbers on the page and sends only with <code>--yes</code> (use it only when they are fake). <code>npx @commmerce/review help</code> lists every option.</p>
+  ${h2('In CI', 'ci')}
+  <p><code>check</code> exits with 1 when it finds a blocker (sideways scroll, a serious accessibility problem, a <code>cm-*</code> element that isn't loaded), so it can fail a pull request. <code>--strict</code> also fails on major findings; <code>--json</code> prints a report.</p>
+  ${codeBlock([{ label: '.github/workflows/ui-check.yml', lang: 'sh', code: `- run: npm ci && npx playwright install --with-deps chromium
+- run: npm run build && (npx vite preview --port 4173 &) && sleep 2
+- run: npx @commmerce/review check http://localhost:4173/ --json --out ui-check.json` }])}
+  ${h2('What happens to what you send', 'privacy')}
+  <ul>
+    <li>It goes to Commmerce's review service over HTTPS and is stored privately. Commmerce reviews it (with the help of Claude, working only on what you sent) and the result comes back only to you.</li>
+    <li>Screenshots and source files are deleted 30 days after the review is done. The findings are kept, so you can still read them.</li>
+    <li>What we learn from reviews shapes new components and refinements. Anything published about it describes the need in general terms, with our own example: never your name, your product or your screens.</li>
+    <li>Higher quotas and anything else about reviews: the <a href="${FEEDBACK_HREF}">feedback form</a> (type Question). General support: ${mail()}.</li>
+  </ul>` });
+
 pages['/apps/starter'] = () => ({ title: 'Starter app', html: `
   <h1>Starter app</h1>
   <p class="lead">A complete app to copy: a plain HTML page built with Commmerce UI, connected to the admin with App Bridge, and a backend that verifies session tokens. Pick <a href="#/apps/starter?s=node">Node</a> (Node 18 or later) or <a href="#/apps/starter?s=php">PHP</a> (PHP 8.0 or later); neither needs packages installed. Building with React? The <a href="#/apps/starter?s=react">React example app</a> uses the npm packages. Smaller starters for <a href="#/start/frameworks">Vue, Angular, Svelte and Next.js</a> show the bindings in each framework.</p>
@@ -2453,7 +2741,7 @@ try { sideNav.collapsed = localStorage.getItem(NAV_PREF) === '1'; } catch {}
 // on a menu label over 20 characters.
 const MENU_LABEL = {
   '/start/install': 'Install', '/start/frameworks': 'Other frameworks',
-  '/apps': 'How apps run', '/apps/native': 'Native apps', '/apps/guidelines': 'Design guidelines', '/apps/review-checklist': 'Review checklist',
+  '/apps': 'How apps run', '/apps/native': 'Native apps', '/apps/guidelines': 'Design guidelines', '/apps/review-checklist': 'Review checklist', '/apps/review': 'Review your build',
   '/patterns/admin-frame': 'Admin frame', '/patterns/admin-dashboard': 'Dashboard', '/patterns/order-list': 'Lists',
   '/patterns/product-editor': 'Product editor', '/patterns/states': 'States', '/patterns/pipeline-board': 'Board or list',
   '/patterns/pick-record': 'Pick a record', '/patterns/inventory-fulfilment': 'Inventory states', '/patterns/search-filter-sort': 'Search and filter',
@@ -2531,9 +2819,11 @@ document.addEventListener('click', (e) => {
 
 let first = true, currentPath = null;
 function route() {
-  let path = fromHash(location.hash.slice(1));
+  // A link from outside may carry parameters in the hash (#apps--review?id=…&t=…: the private review status link).
+  const [hashPath, hashQuery] = location.hash.slice(1).split('?');
+  let path = fromHash(hashPath);
   if (REDIRECTS[path]) { history.replaceState(null, '', '#' + toHash(REDIRECTS[path])); path = REDIRECTS[path]; }
-  const params = pending; pending = new URLSearchParams();
+  const params = hashQuery ? new URLSearchParams(hashQuery) : pending; pending = new URLSearchParams();
   currentPath = path;
   const page = (pages[path] ?? (() => ({ title: 'Page not found', html: `<h1>Page not found</h1><p class="lead">There is no page at this address. It may have moved when the site was reorganised.</p><p><a href="#/">Home</a> · <a href="#/start">Get started</a> · <a href="#/components">Components</a></p>` })))(params);
   const meta = allPages.find((p) => p.path === path);
