@@ -12,9 +12,10 @@ _flutter.loader.load({
   config: {
     entryPointBaseUrl: CDN,
     assetBase: CDN,
-    // CanvasKit stays on Google's CDN until cdn.commmerce.com serves .wasm as application/wasm
-    // (it sends application/octet-stream, and Flutter then fails to start: blank page, 23 Nov 2026).
-    // To switch: add canvasKitBaseUrl: CDN + 'canvaskit/' and canvasKitVariant: 'full' back here.
+    // Needs .wasm served as application/wasm (blog server /etc/nginx/mime.types, 23 Nov 2026); with any other
+    // type Flutter fails to start and the page stays blank.
+    canvasKitBaseUrl: CDN + 'canvaskit/',
+    canvasKitVariant: 'full',
     fontFallbackBaseUrl: CDN + 'fallback-fonts/',
   },
 });
