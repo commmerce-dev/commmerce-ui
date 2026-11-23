@@ -1,0 +1,59 @@
+name: Question
+description: How do I do something with Commmerce UI?
+title: "[question] "
+labels: [triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Don't include customer data, personal data, API keys or private screenshots.
+        For private matters email support@commmerce.com.
+  - type: input
+    id: product
+    attributes:
+      label: Product or app
+      description: Which product or app is this for? (for example Commmerce Connect, Commmerce CRM, or your app's name)
+      placeholder: Commmerce CRM
+    validations:
+      required: true
+  - type: dropdown
+    id: team
+    attributes:
+      label: Internal or third-party
+      options:
+        - Commmerce team (internal)
+        - Third-party developer
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commmerce UI version
+      description: From package.json, or the /v/<version>/ part of the CDN link.
+      placeholder: 1.20.2
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to do? What did you try?
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      description: A public page that shows the problem, if there is one. Demo data only, never real customer data.
+      placeholder: https://
+  - type: input
+    id: device
+    attributes:
+      label: Screen width or device
+      description: Browser window width and device, or "all".
+      placeholder: 390px, iPhone 16, Safari
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images here. Hide any real customer or personal data first.

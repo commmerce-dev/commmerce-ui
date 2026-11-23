@@ -1,0 +1,78 @@
+name: Refinement to an existing component
+description: "An existing component almost fits: a missing option, state, size or behaviour."
+title: "[refinement] "
+labels: [triage, refinement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Don't include customer data, personal data, API keys or private screenshots.
+        For private matters email support@commmerce.com.
+  - type: input
+    id: product
+    attributes:
+      label: Product or app
+      description: Which product or app is this for? (for example Commmerce Connect, Commmerce CRM, or your app's name)
+      placeholder: Commmerce CRM
+    validations:
+      required: true
+  - type: dropdown
+    id: team
+    attributes:
+      label: Internal or third-party
+      options:
+        - Commmerce team (internal)
+        - Third-party developer
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commmerce UI version
+      description: From package.json, or the /v/<version>/ part of the CDN link.
+      placeholder: 1.20.2
+    validations:
+      required: true
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      placeholder: cm-select
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      description: A public page that shows the problem, if there is one. Demo data only, never real customer data.
+      placeholder: https://
+  - type: input
+    id: device
+    attributes:
+      label: Screen width or device
+      description: Browser window width and device, or "all".
+      placeholder: 390px, iPhone 16, Safari
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images here. Hide any real customer or personal data first.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+      description: What happened instead. Include the markup or code if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Anything you are doing to get around it for now.

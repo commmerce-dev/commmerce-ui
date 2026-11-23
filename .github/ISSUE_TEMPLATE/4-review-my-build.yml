@@ -1,0 +1,67 @@
+name: Review my build (public)
+description: Ask for a design review of a public page you built with Commmerce UI.
+title: "[review] "
+labels: [triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **This form is public.** Use a page with demo data only: no real customers, orders, names, emails or phone numbers.
+
+        For a private review (internal products, real data, unreleased work), use the private route instead:
+        run `npx @commmerce/review` or let your coding agent use it; see the docs page "Review with your agent"
+        at https://commmerce.com/commmerceui/. You can also email support@commmerce.com.
+  - type: checkboxes
+    id: demo
+    attributes:
+      label: Demo data only
+      options:
+        - label: The page and screenshots contain demo data only, nothing real or personal.
+          required: true
+  - type: input
+    id: product
+    attributes:
+      label: Product or app
+      description: Which product or app is this for? (for example Commmerce Connect, Commmerce CRM, or your app's name)
+      placeholder: Commmerce CRM
+    validations:
+      required: true
+  - type: dropdown
+    id: team
+    attributes:
+      label: Internal or third-party
+      options:
+        - Commmerce team (internal)
+        - Third-party developer
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commmerce UI version
+      description: From package.json, or the /v/<version>/ part of the CDN link.
+      placeholder: 1.20.2
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      description: The public page to review. Demo data only, never real customer data.
+      placeholder: https://
+  - type: input
+    id: device
+    attributes:
+      label: Screen width or device
+      description: Browser window width and device, or "all".
+      placeholder: 390px, iPhone 16, Safari
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images here. Hide any real customer or personal data first.
+  - type: textarea
+    id: questions
+    attributes:
+      label: What should we look at?
+      description: Specific screens, widths or questions.

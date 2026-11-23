@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Email support
+    url: mailto:support@commmerce.com
+    about: Private questions, anything with customer data, or commercial questions. Email support@commmerce.com.
+  - name: Commmerce UI docs
+    url: https://commmerce.com/commmerceui/
+    about: Components, patterns, install steps and the "Review with your agent" page for private build reviews.
