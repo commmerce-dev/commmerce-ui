@@ -6,13 +6,14 @@
     "packages/icons",
     "packages/ui",
     "packages/ui-react",
-    "packages/app-bridge"
+    "packages/app-bridge",
+    "packages/review"
   ],
   "scripts": {
-    "build": "node scripts/ws.mjs build tokens icons ui ui-react app-bridge",
-    "test": "node scripts/check-scale.mjs && node scripts/ws.mjs test ui ui-react app-bridge",
+    "build": "node scripts/ws.mjs build tokens icons ui ui-react app-bridge review",
+    "test": "node scripts/check-scale.mjs && node scripts/ws.mjs test ui ui-react app-bridge review",
     "lint": "npx --yes oxlint@1.90.0 --deny-warnings",
-    "typecheck": "node scripts/ws.mjs build tokens icons && tsc -p packages/ui/tsconfig.json && tsc --noEmit -p packages/ui-react/tsconfig.json && tsc --noEmit -p packages/app-bridge/tsconfig.json",
+    "typecheck": "node scripts/ws.mjs build tokens icons && tsc -p packages/ui/tsconfig.json && tsc --noEmit -p packages/ui-react/tsconfig.json && tsc --noEmit -p packages/app-bridge/tsconfig.json && tsc -p packages/review/tsconfig.json",
     "playground": "npm run build && npx --yes http-server@14.1.1 . -p 4500 -c-1 -o /playground/",
     "docs:build": "npm run build && node scripts/build-docs.mjs",
     "docs": "npm run docs:build && npx --yes http-server@14.1.1 docs -p 4600 -c-1 -s -o /dev.html",

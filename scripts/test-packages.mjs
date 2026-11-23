@@ -12,7 +12,7 @@ const browsers = (process.argv[2] ?? 'chromium,webkit').split(',');
 const sh = (cmd, cwd) => execSync(cmd, { cwd, stdio: ['ignore', 'pipe', 'inherit'] }).toString().trim();
 const work = mkdtempSync(join(tmpdir(), 'commmerce-pkg-'));
 const tars = join(work, 'tarballs'); mkdirSync(tars);
-const names = ['tokens', 'icons', 'ui', 'ui-react', 'app-bridge'];
+const names = ['tokens', 'icons', 'ui', 'ui-react', 'app-bridge', 'review'];
 
 // 1. Pack, and check each tarball has what the package promises.
 const packed = {};
@@ -61,6 +61,12 @@ function App() {
 }
 createRoot(document.getElementById('root')).render(<App />);
 `);
+// @commmerce/review: its bin runs from the installed tarball and has the bundled component data.
+const reviewBin = join(app, 'node_modules', '.bin', 'commmerce-review');
+if (sh(`${reviewBin} --version`, app) !== JSON.parse(readFileSync(join(root, 'packages/review/package.json'), 'utf8')).version) throw new Error('@commmerce/review: --version differs from its package.json');
+if (!existsSync(join(app, 'node_modules/@commmerce/review/dist/components.json'))) throw new Error('@commmerce/review: dist/components.json missing from the package');
+console.log('@commmerce/review: bin runs, component data bundled');
+
 const esbuild = join(root, 'node_modules', '.bin', 'esbuild');
 sh(`${esbuild} plain.js --bundle --format=esm --outfile=dist/plain.js --log-level=error`, app);
 sh(`${esbuild} react.jsx --bundle --format=esm --jsx=automatic --outfile=dist/react.js --log-level=error --define:process.env.NODE_ENV='"production"'`, app);

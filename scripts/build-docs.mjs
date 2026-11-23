@@ -37,7 +37,7 @@ for (const f of ['README.md', 'index.php', 'lib/SessionToken.php', 'public/index
 }
 // One version for every published package, and the newest release note must be for that version.
 // This is what keeps the hosted build's /v/<version>/ addresses moving forward with each release.
-const pkgs = ['tokens', 'icons', 'ui', 'ui-react', 'app-bridge'].map((n) => JSON.parse(readFileSync(`packages/${n}/package.json`, 'utf8')));
+const pkgs = ['tokens', 'icons', 'ui', 'ui-react', 'app-bridge', 'review'].map((n) => JSON.parse(readFileSync(`packages/${n}/package.json`, 'utf8')));
 const VERSION = pkgs[0].version;
 const mismatch = pkgs.filter((p) => p.version !== VERSION).map((p) => `${p.name}@${p.version}`);
 if (mismatch.length) throw new Error(`docs: package versions differ from ${VERSION}: ${mismatch.join(', ')}`);

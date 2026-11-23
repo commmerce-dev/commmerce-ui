@@ -18,6 +18,7 @@ jobs:
       tests: ${{ steps.plan.outputs.tests }}
       any_tests: ${{ steps.plan.outputs.any_tests }}
       starters: ${{ steps.plan.outputs.starters }}
+      review: ${{ steps.plan.outputs.review }}
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }  # the diff against the pull request's base
@@ -108,6 +109,32 @@ jobs:
           name: test-reports-${{ matrix.browser }}-${{ matrix.shard }}
           path: test-reports/
           retention-days: 14
+
+  # @commmerce/review (CLI + MCP server, node:test): component data, the page check and screenshots in Chromium, the CLI
+  # and stdio MCP server against an in-memory review service, and the docs page's review form. The end-to-end run
+  # against the real review service (private repo) is local: COMMMERCE_REVIEW_SERVICE_DIR=... npm test in packages/review.
+  review:
+    needs: plan
+    if: needs.plan.outputs.review == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('package-lock.json') }}
+      - if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: npm run build
+      - run: node scripts/build-docs.mjs
+      - run: npm test
+        working-directory: packages/review
 
   # The starters against the PUBLISHED npm packages: each installs from the public registry with its own
   # package-lock.json (not the workspace), builds the app and checks it in Chromium. On pull requests only the

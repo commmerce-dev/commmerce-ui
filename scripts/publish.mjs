@@ -1,11 +1,11 @@
-// Publishes @commmerce/tokens, icons, ui, ui-react and app-bridge to npm, in dependency order.
+// Publishes @commmerce/tokens, icons, ui, ui-react, app-bridge and review to npm, in dependency order.
 //   node scripts/publish.mjs        dry run: builds, tests, and shows exactly what would be published
 //   node scripts/publish.mjs --yes  publishes (needs `npm login` as the npm user "commmerce", which owns the @commmerce scope)
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 const yes = process.argv.includes('--yes');
 const run = (cmd) => { console.log(`$ ${cmd}`); execSync(cmd, { stdio: 'inherit' }); };
-const names = ['tokens', 'icons', 'ui', 'ui-react', 'app-bridge'];
+const names = ['tokens', 'icons', 'ui', 'ui-react', 'app-bridge', 'review'];
 const versions = names.map((n) => JSON.parse(readFileSync(`packages/${n}/package.json`, 'utf8')).version);
 if (new Set(versions).size !== 1) throw new Error(`versions differ: ${versions.join(', ')}`);
 const version = versions[0];
@@ -24,5 +24,13 @@ run('node scripts/build-docs.mjs');          // fails if the release note for th
 run('node scripts/test-packages.mjs chromium');
 // Release candidates (1.0.0-rc.1) go to the `next` dist-tag, so `npm install @commmerce/ui` keeps the last final release.
 const tag = version.includes('-') ? ' --tag next' : '';
-for (const n of names) run(`npm publish --workspace @commmerce/${n} --access public${tag}${yes ? '' : ' --dry-run'}`);
+for (const n of names) {
+  // Trusted publishing (OIDC) can't create a package: a new one must be published once by hand (npm login as "commmerce")
+  // and given its trusted publisher first. Until then the release skips it instead of failing after the others are out.
+  if (yes && oidc) {
+    try { execSync(`npm view @commmerce/${n} name`, { stdio: 'ignore' }); }
+    catch { console.warn(`::warning::@commmerce/${n} is not on npm yet: publish it once by hand and add its trusted publisher. Skipped.`); continue; }
+  }
+  run(`npm publish --workspace @commmerce/${n} --access public${tag}${yes ? '' : ' --dry-run'}`);
+}
 console.log(yes ? `Published ${version}. Tag it: git tag v${version} && git push --tags` : 'Dry run complete. Re-run with --yes to publish.');
