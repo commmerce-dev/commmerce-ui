@@ -48,13 +48,22 @@ async function startFake() {
     let m;
     if (path === '/v1/public/reviews' && req.method === 'POST') {
       if (body.website) return send(201, { id: id('rv'), status: 'queued', status_url: 'x' });
-      if (!body.name || !/@/.test(body.email ?? '') || !body.app || !['internal', 'third-party'].includes(body.kind)) return send(400, { error: { code: 'invalid', message: 'name, email, app and kind are required' } });
+      if (!body.name || !/@/.test(body.email ?? '') || !body.app || !['internal', 'third-party'].includes(body.submitter_kind ?? body.kind)) return send(400, { error: { code: 'invalid', message: 'name, email, app and submitter_kind are required' } });
       if (!body.url && !body.screens?.length) return send(400, { error: { code: 'invalid', message: 'Give the URL of your build or add screenshots.' } });
       const it = { id: id('rv'), type: 'review', status: 'queued', app: body.app, findings: [], summary: null, verdict: null, created_at: now, updated_at: now, poll_after_s: 60, token: randomBytes(12).toString('hex'), email: body.email, screens: body.screens ?? [] };
       items.set(it.id, it);
-      return send(201, { id: it.id, status: 'queued', status_url: `https://commmerce.com/commmerceui/#apps--review?id=${it.id}&t=${it.token}`, poll_after_s: 60 });
+      return send(201, { id: it.id, status: 'queued', status_url: `https://commmerce.com/commmerceui/#apps--feedback?id=${it.id}&t=${it.token}`, poll_after_s: 60 });
     }
-    if ((m = /^\/v1\/public\/reviews\/(\w+)$/.exec(path))) {
+    if (path === '/v1/public/feedback' && req.method === 'POST') {
+      if (body.website) return send(201, { id: id('fb'), status: 'queued', status_url: 'x' });
+      if (!body.name || !/@/.test(body.email ?? '') || !body.app || !['internal', 'third-party'].includes(body.submitter_kind) || !body.title || !body.body
+        || !['bug', 'refinement', 'question', 'component-request'].includes(body.kind)) return send(400, { error: { code: 'invalid', message: 'missing fields' } });
+      const cr = body.kind === 'component-request';
+      const it = { id: id(cr ? 'cr' : 'fb'), type: cr ? 'component-request' : 'feedback', ...(cr ? { name: body.title } : { kind: body.kind, title: body.title }), status: 'queued', app: body.app, findings: [], summary: null, reply: null, created_at: now, updated_at: now, poll_after_s: 60, token: randomBytes(12).toString('hex'), email: body.email, fields: body.fields, images: body.images ?? [] };
+      items.set(it.id, it);
+      return send(201, { id: it.id, status: 'queued', status_url: `https://commmerce.com/commmerceui/#apps--feedback?id=${it.id}&t=${it.token}`, poll_after_s: 60 });
+    }
+    if ((m = /^\/v1\/public\/(?:items|reviews|feedback)\/(\w+)$/.exec(path))) {
       const it = items.get(m[1]);
       const t = req.headers['x-status-token'] ?? url.searchParams.get('t');
       return it && it.token && t === it.token ? send(200, view(it)) : send(404, { error: { code: 'not_found', message: 'No review at this link.' } });
@@ -74,7 +83,7 @@ async function startFake() {
       const it = items.get(m[1]); Object.assign(it, body, { updated_at: now }); if (['done', 'failed'].includes(it.status)) delete it.poll_after_s;
       return send(200, view(it));
     }
-    if ((m = /^\/v1\/admin\/items\/(\w+)$/.exec(path)) && auth === adminKey) { const it = items.get(m[1]); return send(200, { ...it, submitter_email: it.email }); }
+    if ((m = /^\/v1\/admin\/items\/(\w+)$/.exec(path)) && auth === adminKey) { const it = items.get(m[1]); return send(200, { ...it, submitter_email: it.email, source: it.token ? 'form' : 'api', payload: { fields: it.fields }, status_url: it.token ? `https://commmerce.com/commmerceui/#apps--feedback?id=${it.id}&t=${it.token}` : undefined }); }
     return send(404, { error: { code: 'not_found', message: path } });
   });
   const port = await listen(srv);

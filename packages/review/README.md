@@ -3,9 +3,9 @@
 Review what you build with Commmerce UI, from your coding agent or CI: look components up, check a page locally, and
 get a design and code review from Commmerce. A command line tool and an MCP server.
 
-**Private by default.** What you send (from here, the MCP server, the form on the docs page, or by email to
-ui@commmerce.com) is seen only by Commmerce and your team, and never published. Replies come back only to you
-(`commmerce-review status <id>`, `get_review`, or the same email thread). Screenshots and source are deleted 30 days after
+**Private by default.** What you send (from here, the MCP server, or the feedback form,
+https://commmerce.com/commmerceui/#apps--feedback) is seen only by Commmerce and your team, and never published. Replies come back only to you
+(`commmerce-review status <id>`, `get_review`, or the form's private status link). Screenshots and source are deleted 30 days after
 a review is done. Send demo data only. Public GitHub issues are optional, only if you want to report a library bug in public.
 
 Docs: https://commmerce.com/commmerceui/#apps--review
@@ -13,7 +13,7 @@ Docs: https://commmerce.com/commmerceui/#apps--review
 ## Key
 
 `submit`, `status`, `wait`, `request-component` and `feedback` need a review key in `COMMMERCE_REVIEW_KEY`. Keys are
-issued by Commmerce on request: email ui@commmerce.com. `check` and the component lookup need no key.
+issued by Commmerce on request: send the feedback form (type Question). `check` and the component lookup need no key.
 
 ## Agents
 

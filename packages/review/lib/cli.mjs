@@ -14,9 +14,9 @@ const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 
 export const HELP = `commmerce-review ${VERSION}: review what you build with Commmerce UI, from your coding agent or CI.
 
-PRIVATE BY DEFAULT: everything you send (here, through the MCP server, or by email to ui@commmerce.com) is seen only
+PRIVATE BY DEFAULT: everything you send (here, through the MCP server, or the feedback form) is seen only
 by Commmerce and your team, never published. Replies come back only to you: \`commmerce-review status <id>\` / get_review,
-or the same email thread. Screenshots and source are deleted 30 days after a review is done. Send demo data only.
+or the form's private status link. Screenshots and source are deleted 30 days after a review is done. Send demo data only.
 Public GitHub issues are optional, only if you want to report a library bug in public.
 
 Usage: commmerce-review <command> [options]
@@ -47,10 +47,12 @@ Commands
 
 Environment
   COMMMERCE_REVIEW_KEY        your key (submit, status, wait, request-component, feedback). Keys are issued by
-                              Commmerce on request: email ui@commmerce.com. check and component lookup need no key.
+                              Commmerce on request: send the feedback form (type Question). check and
+                              component lookup need no key.
   COMMMERCE_REVIEW_URL        API base (default https://commmerce.com/commmerceui/api/v1)
 
-Docs: https://commmerce.com/commmerceui/#apps--review`;
+Docs: https://commmerce.com/commmerceui/#apps--review
+Feedback form (no key needed): https://commmerce.com/commmerceui/#apps--feedback`;
 
 /** @param {string | undefined} v */
 const fileOrText = (v) => (v?.startsWith('@') ? readFileSync(v.slice(1), 'utf8') : v);

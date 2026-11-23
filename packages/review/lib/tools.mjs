@@ -12,7 +12,7 @@ Workflow:
 2. When a screen is done, run check_page on its URL (localhost works) and fix every blocker.
 3. Then call submit_review (screenshots are taken locally at 390, 768 and 1280px; demo data only) and poll get_review until the status is done. Apply each finding's fix (the Commmerce UI way, with the docs link) and resubmit with resubmission_of.
 4. Missing a component? request_component. Found a bug or have a suggestion? send_feedback.
-PRIVATE: everything sent through these tools (or by email to ui@commmerce.com) is seen only by Commmerce and your team, never published; replies come back only to you (get_review, or the same email thread). Screenshots and source are deleted 30 days after the review is done. Public GitHub issues are optional, only for someone who wants to report a library bug in public. Keys are issued by Commmerce on request: ui@commmerce.com.`;
+PRIVATE: everything sent through these tools (or the feedback form, https://commmerce.com/commmerceui/#apps--feedback) is seen only by Commmerce and your team, never published; replies come back only to you (get_review, or the form's private status link). Screenshots and source are deleted 30 days after the item is done. Public GitHub issues are optional, only for someone who wants to report a library bug in public. Keys are issued by Commmerce on request through the feedback form (type Question).`;
 
 const COMPONENT_HINT = 'Always look components up before building UI: Commmerce UI has ready-made, accessible cm-* components, and reviews flag native controls or custom CSS where a cm-* component exists.';
 
@@ -93,7 +93,7 @@ export function localTools(client) {
     {
       name: 'send_feedback',
       title: 'Send feedback',
-      description: 'Report a Commmerce UI bug, suggest a refinement, or ask a question. Include steps, the component and version. Private: only Commmerce sees it and the reply comes back only to you (get_review). People can also send UI feedback privately by email to ui@commmerce.com.',
+      description: 'Report a Commmerce UI bug, suggest a refinement, or ask a question. Include steps, the component and version. Private: only Commmerce sees it and the reply comes back only to you (get_review). People can also use the private feedback form: https://commmerce.com/commmerceui/#apps--feedback.',
       inputSchema: { type: 'object', properties: { kind: { type: 'string', enum: ['bug', 'refinement', 'question'] }, title: { type: 'string' }, body: { type: 'string' }, app: { type: 'string' } }, required: ['kind', 'title', 'body'] },
       handler: async (/** @type {any} */ a) => client.sendFeedback({ kind: a.kind, title: a.title, body: a.body, ...(a.app ? { app: a.app } : {}) }),
     },

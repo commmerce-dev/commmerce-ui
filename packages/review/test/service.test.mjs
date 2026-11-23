@@ -22,7 +22,7 @@ after(() => { svc.close(); site.close(); });
 
 test('no key: clear message, exit 2', async () => {
   const r = await cli(['status', 'rv_x'], { COMMMERCE_REVIEW_KEY: '', COMMMERCE_REVIEW_URL: `${svc.base}/v1` });
-  assert.equal(r.code, 2); assert.match(r.stderr, /COMMMERCE_REVIEW_KEY.*ui@commmerce\.com/s);
+  assert.equal(r.code, 2); assert.match(r.stderr, /COMMMERCE_REVIEW_KEY.*#apps--feedback/s);
   const bad = await cli(['status', 'rv_x'], { ...env, COMMMERCE_REVIEW_KEY: 'cmr_wrong' });
   assert.equal(bad.code, 2); assert.match(bad.stderr, /not valid/);
 });
@@ -30,7 +30,7 @@ test('no key: clear message, exit 2', async () => {
 test('help and version; unknown command exits 2', async () => {
   const h = await cli(['help']);
   assert.equal(h.code, 0);
-  assert.match(h.stdout, /PRIVATE BY DEFAULT/); assert.match(h.stdout, /ui@commmerce\.com/); assert.match(h.stdout, /GitHub issues are optional/);
+  assert.match(h.stdout, /PRIVATE BY DEFAULT/); assert.match(h.stdout, /#apps--feedback/); assert.ok(!/ui@commmerce/.test(h.stdout)); assert.match(h.stdout, /GitHub issues are optional/);
   assert.match((await cli(['--version'])).stdout, /^\d+\.\d+\.\d+/);
   assert.equal((await cli(['frobnicate'])).code, 2);
 });

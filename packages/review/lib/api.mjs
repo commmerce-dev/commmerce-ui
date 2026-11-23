@@ -1,8 +1,9 @@
 // Client for the Commmerce review service (API v1). The key comes from COMMMERCE_REVIEW_KEY; keys are issued by
-// Commmerce on request (email ui@commmerce.com).
+// Commmerce on request, through the feedback form (type Question).
 
+export const FEEDBACK_FORM = 'https://commmerce.com/commmerceui/#apps--feedback';
 export const DEFAULT_BASE = 'https://commmerce.com/commmerceui/api/v1';
-export const KEY_HELP = 'Set COMMMERCE_REVIEW_KEY to your review key. Keys are issued by Commmerce on request: email ui@commmerce.com.';
+export const KEY_HELP = 'Set COMMMERCE_REVIEW_KEY to your review key. Keys are issued by Commmerce on request: send the feedback form with the type Question, https://commmerce.com/commmerceui/#apps--feedback';
 
 export class ApiError extends Error {
   /** @param {number} status @param {string} code @param {string} message */

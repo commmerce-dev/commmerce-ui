@@ -429,11 +429,12 @@ h1 cm-badge { vertical-align: middle; margin-left: var(--cm-space-8); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
-/* Review with your agent (/apps/review): the private review form and status link */
+/* Send feedback (/apps/feedback): the private form and status link */
 .rv-form { display: flex; flex-direction: column; gap: var(--cm-space-16); max-width: 560px; margin: var(--cm-space-16) 0 var(--cm-space-24); }
 .rv-form[hidden] { display: none; }
 .rv-hp { position: absolute; inset-inline-start: -10000px; inline-size: 1px; block-size: 1px; overflow: hidden; }
-#rv-result:empty { display: none; }
+#fb-result:empty { display: none; }
+.fb-field[hidden] { display: none; }
 .rv-link { overflow-wrap: anywhere; margin: var(--cm-space-8) 0 0; }
 .rv-status { border: 1px solid var(--cm-border-subtle); border-radius: var(--cm-radius-md); padding: var(--cm-space-16); margin: var(--cm-space-16) 0; overflow-wrap: anywhere; }
 .rv-status-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cm-space-8); }
