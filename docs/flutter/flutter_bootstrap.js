@@ -37,8 +37,19 @@ if (!window._flutter) {
 _flutter.buildConfig = {"engineRevision":"18818009497c581ede5d8a3b8b833b81d00cebb7","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"}]};
 
 
+// The web demo is served at commmerce.com/commmerceui/flutter/; its code, assets, the CanvasKit engine and
+// the fallback fonts all load from cdn.commmerce.com (same files, Cloudflare Worker route), not Google.
+// scripts/flutter-web-mirror.mjs copies CanvasKit and the fallback fonts into the build after `flutter build web`.
+const CDN = 'https://cdn.commmerce.com/commmerceui/flutter/';
 _flutter.loader.load({
   serviceWorkerSettings: {
-    serviceWorkerVersion: "2328916559"
-  }
+    serviceWorkerVersion: "1538402165",
+  },
+  config: {
+    entryPointBaseUrl: CDN,
+    assetBase: CDN,
+    canvasKitBaseUrl: CDN + 'canvaskit/',
+    canvasKitVariant: 'full',
+    fontFallbackBaseUrl: CDN + 'fallback-fonts/',
+  },
 });
