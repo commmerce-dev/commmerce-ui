@@ -444,3 +444,7 @@ h1 cm-badge { vertical-align: middle; margin-left: var(--cm-space-8); }
 .rv-findings > li { margin-block: var(--cm-space-16); }
 .rv-findings p { margin: var(--cm-space-4) 0; }
 .rv-findings pre { overflow-x: auto; }
+.rv-proposed { display: flex; flex-wrap: wrap; gap: var(--cm-space-16); }
+.rv-proposed figure { margin: 0; max-inline-size: 100%; }
+.rv-proposed img { display: block; max-inline-size: 100%; max-block-size: 480px; border: 1px solid var(--cm-border-subtle); border-radius: var(--cm-radius-sm); }
+.rv-proposed figcaption { font-size: var(--cm-font-size-12); color: var(--cm-text-tertiary); }

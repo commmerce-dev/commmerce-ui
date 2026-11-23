@@ -95,11 +95,13 @@ test('build review: sends privately, shows the private link, which shows the fin
   const item = await admin(svc, 'GET', `/v1/admin/items/${m[1]}`);
   assert.equal(item.submitter_email, 'asha@example.com'); assert.equal(item.source, 'form');
   await admin(svc, 'POST', `/v1/admin/items/${m[1]}/claim`, {});
-  await admin(svc, 'POST', `/v1/admin/items/${m[1]}/result`, { status: 'done', verdict: 'changes-needed', summary: 'Use the Commmerce UI table.', findings: [{ id: 'f1', screen: 'orders', width: 390, severity: 'major', element: 'table.orders', problem: 'A native table scrolls sideways on phones.', fix: 'Use <cm-data-table>.', component: 'cm-data-table', docs_url: 'https://commmerce.com/commmerceui/#components--data-table' }] });
+  await admin(svc, 'POST', `/v1/admin/items/${m[1]}/result`, { status: 'done', verdict: 'changes-needed', summary: 'Use the Commmerce UI table.', impression: 'Clean, but the table fights the filters.', top3: ['Use cm-data-table'], proposed: [{ name: 'orders', width: 390, image: PNG }], findings: [{ id: 'f1', screen: 'orders', width: 390, severity: 'major', element: 'table.orders', problem: 'A native table scrolls sideways on phones.', fix: 'Use <cm-data-table>.', component: 'cm-data-table', docs_url: 'https://commmerce.com/commmerceui/#components--data-table' }] });
   await page.goto(`${site.base}/commmerceui/dev.html#apps--feedback?id=${m[1]}&t=${m[2]}`);
   await page.waitForSelector('#fb-status .rv-findings');
   const text = await page.textContent('#fb-status');
   assert.match(text, /Done/); assert.match(text, /Changes needed/); assert.match(text, /A native table scrolls sideways/);
+  assert.match(text, /Clean, but the table fights the filters/); assert.match(text, /Change these first/);
+  assert.equal(await page.locator('#fb-status .rv-proposed img').count(), 1);
   assert.equal(await page.getAttribute('#fb-status .rv-findings a', 'href'), 'https://commmerce.com/commmerceui/#components--data-table');
   await page.goto(`${site.base}/commmerceui/dev.html#apps--feedback?id=${m[1]}&t=wrong`);
   await page.waitForSelector('#fb-status cm-banner[tone="critical"]');

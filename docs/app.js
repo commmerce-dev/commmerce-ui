@@ -1544,7 +1544,10 @@ function itemStatusHtml(r) {
   const what = ITEM_TYPE[r.type === 'feedback' ? r.kind : r.type] ?? 'Feedback';
   return `<div class="rv-status-head"><cm-badge tone="${tone}">${esc(label)}</cm-badge>${r.verdict ? ` <strong>${esc(VERDICT[r.verdict] ?? r.verdict)}</strong>` : ''}
       <span class="muted small">${esc(what)}${r.title || r.name ? `: ${esc(r.title || r.name)}` : ''} · ${esc(r.app ?? '')} · ${esc(r.id)} · updated ${esc(new Date(r.updated_at).toLocaleString())}</span></div>
+    ${r.impression ? `<p><strong>${esc(r.impression)}</strong></p>` : ''}
     ${r.summary ? `<p>${esc(r.summary)}</p>` : ''}
+    ${r.top3?.length ? `<h3>Change these first</h3><ol>${r.top3.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
+    ${r.proposed?.some((p) => p.image) ? `<h3>Proposed</h3><div class="rv-proposed">${r.proposed.filter((p) => p.image).map((p) => `<figure><img alt="Proposed ${esc(p.name)}${p.width ? ` at ${esc(p.width)}px` : ''}" src="data:image/png;base64,${String(p.image).replace(/[^A-Za-z0-9+/=]/g, '')}"><figcaption>${esc(p.name)}${p.width ? ` · ${esc(p.width)}px` : ''}</figcaption></figure>`).join('')}</div>` : ''}
     ${!r.summary && !r.reply && r.status !== 'done' ? '<p class="muted">No answer yet. This page checks again every minute while it is open; you also get one email when it is done.</p>' : ''}
     ${findings.length ? `<ol class="rv-findings">${findings.map((f) => `<li><p><cm-badge tone="${SEVERITY_TONE[f.severity] ?? 'neutral'}">${esc(f.severity)}</cm-badge> <strong>${esc(f.screen)}</strong> at ${esc(f.width)}px: <code>${esc(f.element)}</code></p>
       <p>${esc(f.problem)}</p><p><strong>Fix:</strong> ${esc(f.fix)}</p>${f.snippet ? `<pre><code>${esc(f.snippet)}</code></pre>` : ''}${safeDocs(f.docs_url) ? `<p><a href="${esc(f.docs_url)}">Docs${f.component ? `: ${esc(f.component)}` : ''}</a></p>` : ''}</li>`).join('')}</ol>` : ''}
