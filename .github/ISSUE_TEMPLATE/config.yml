@@ -6,7 +6,7 @@ contact_links:
     url: https://commmerce.com/commmerceui/#apps--review
     about: Private by default. Run `npx @commmerce/review` or let your coding agent use it ("Review with your agent" in the docs). Only the Commmerce UI team sees it.
   - name: Send feedback privately
-    url: https://commmerce.com/commmerceui/#apps--review
+    url: https://commmerce.com/commmerceui/#apps--feedback
     about: Private by default. Bugs, component requests, improvements or questions through the private form. Only the Commmerce UI team sees it.
   - name: Email support
     url: mailto:support@commmerce.com
