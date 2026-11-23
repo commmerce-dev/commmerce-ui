@@ -1557,7 +1557,7 @@ const FB_TYPES = [
   ['bug', 'Bug in Commmerce UI', 'A component does something wrong.'],
   ['component-request', 'Request a component', 'Commmerce UI has no component for something your screens need.'],
   ['refinement', 'Improve an existing component', 'A component is missing an option or could work better.'],
-  ['question', 'Question', 'How to do something, or ask for a review key.'],
+  ['question', 'Question', 'How to do something with Commmerce UI.'],
 ];
 const tf = (name, label, extra = '') => `<cm-text-field name="${name}" label="${label}" ${extra}></cm-text-field>`;
 const FB_FIELDS = [
@@ -1574,7 +1574,7 @@ const FB_FIELDS = [
   ['reference', 'component-request', '', tf('reference', 'Reference', 'help-text="A link to something similar, or add a screenshot below."')],
   ['workaround', 'component-request', '', tf('workaround', 'What you do today', 'multiline rows="2"')],
   ['missing', 'refinement', 'refinement', tf('missing', 'What is missing or should change', 'multiline rows="4"')],
-  ['question', 'question', 'question', tf('question', 'Your question', 'multiline rows="4" help-text="Asking for a review key? Say which team or app it is for."')],
+  ['question', 'question', 'question', tf('question', 'Your question', 'multiline rows="4"')],
 ];
 const FB_LABELS = Object.fromEntries(FB_FIELDS.map(([n, , , m]) => [n, /label="([^"]+)"/.exec(m)[1]]));
 
@@ -1729,27 +1729,39 @@ pages['/apps/feedback'] = (params) => ({ title: 'Send feedback', html: `
 
 pages['/apps/review'] = () => ({ title: 'Review with your agent', html: `
   <h1>Review with your agent</h1>
-  <p class="lead">Everything you send is private. Your coding agent (Claude Code, Codex, ChatGPT) or the command line can look Commmerce UI components up before building, check a page, and send screens to Commmerce for review. Findings come back to your agent: what to change, the Commmerce UI way, with links to the docs.</p>
+  <p class="lead">Everything you send is private. Set up your coding agent (Claude Code, Codex, ChatGPT) with one command: it looks Commmerce UI components up before building, checks your pages, and sends screens to Commmerce for review. Findings come back to your agent: what to change, the Commmerce UI way, with links to the docs.</p>
   ${PRIVATE_NOTE}
   <p>No agent? Use the <a href="${FEEDBACK_HREF}">feedback form</a>: it sends build reviews, bug reports, component requests, improvements and questions, privately.</p>
-  ${h2('Get a review key', 'key')}
-  <p>Agents and the command line send with a key, so your team's reviews stay together and your agent can read the results. Keys are issued by Commmerce on request: send the <a href="${FEEDBACK_HREF}">feedback form</a> with the type Question, saying your team or app and whether you are a Commmerce team or a third-party developer. Each key has a daily quota. Looking up components and checking a page on your machine need no key.</p>
-  ${note('The <code>@commmerce/review</code> package (command line and MCP server for your agent) is published to npm with the next Commmerce UI release. Until then, use the remote MCP server or the feedback form.')}
-  ${h2('Claude Code', 'claude-code')}
-  <p>Add the MCP server. Your agent then looks components up before it builds, checks the page, and sends it for review when you say it is done.</p>
+  ${h2('Set up in one command', 'setup')}
+  <p>Add the Commmerce review server to Claude Code. No key, no install:</p>
+  ${codeBlock([{ label: 'Terminal', lang: 'sh', code: `claude mcp add --transport http commmerce-review ${REVIEW_MCP_URL}` }])}
+  <p>Without a key your agent can already look components up (<code>search_components</code>, <code>get_component</code>). To check pages and send reviews, ask it for a key:</p>
+  ${codeBlock([{ label: 'Ask Claude', lang: 'sh', code: 'Get me a Commmerce UI review key. My email is asha@yourcompany.com, team "Orders app".' }])}
+  <p>Commmerce emails the key to that address with the one command that adds it; the key is never shown in the chat. Remove the keyless server first, then run the command from the email:</p>
+  ${codeBlock([{ label: 'Terminal', lang: 'sh', code: `claude mcp remove commmerce-review
+claude mcp add --transport http commmerce-review ${REVIEW_MCP_URL} --header "Authorization: Bearer cmr_…"` }])}
+  ${h2('About keys', 'key')}
+  <ul>
+    <li>Work addresses at commmerce.com or outdoinc.com get an internal key for the team you name, so your team's reviews stay together. Any other address gets a third-party key for your company (on personal mail such as Gmail, for you alone), with 10 submissions a day.</li>
+    <li>Use a work address that receives mail: disposable addresses are refused. You can ask 3 times a day; asking again for the same team replaces a key not yet sent.</li>
+    <li>Without an agent: <code>npx @commmerce/review key request --email you@company.com --name "Your name" --team "Your team"</code>.</li>
+    <li>Keep the key secret, like a password. Looking up components and checking a page on your machine need no key.</li>
+  </ul>
+  ${note('The <code>@commmerce/review</code> package (command line and the local MCP server below) is published to npm with the next Commmerce UI release. Until then, use the remote server above or the feedback form.')}
+  ${h2('Claude Code with the local server', 'claude-code')}
+  <p>The local server also checks pages on your machine (localhost works) and takes screenshots for reviews. It needs Node 18 or later and Playwright.</p>
   ${codeBlock([{ label: 'Terminal', lang: 'sh', code: `claude mcp add commmerce-review --env COMMMERCE_REVIEW_KEY=cmr_your_key -- npx -y @commmerce/review mcp` }])}
-  <p>Or the remote server (no install; it can't open pages on your machine, so <code>check_page</code> there tells you to run the command line check):</p>
-  ${codeBlock([{ label: 'Terminal', lang: 'sh', code: `claude mcp add --transport http commmerce-review ${REVIEW_MCP_URL} --header "Authorization: Bearer cmr_your_key"` }])}
   ${h2('Codex', 'codex')}
-  <p>Add the server to <code>~/.codex/config.toml</code>:</p>
+  <p>Add the server to <code>~/.codex/config.toml</code> (leave out <code>env</code> until you have a key; then ask Codex to request one):</p>
   ${codeBlock([{ label: '~/.codex/config.toml', lang: 'sh', code: `[mcp_servers.commmerce-review]
 command = "npx"
 args = ["-y", "@commmerce/review", "mcp"]
 env = { COMMMERCE_REVIEW_KEY = "cmr_your_key" }` }])}
   ${h2('ChatGPT', 'chatgpt')}
-  <p>Where your ChatGPT plan lets you add a custom MCP connector that sends an <code>Authorization</code> header, add <code>${REVIEW_MCP_URL}</code> with the header <code>Authorization: Bearer cmr_your_key</code>. The server doesn't offer OAuth sign-in yet: if your connector settings only offer OAuth, use the command line or the <a href="${FEEDBACK_HREF}">feedback form</a>.</p>
+  <p>Where your ChatGPT plan lets you add a custom MCP connector, add <code>${REVIEW_MCP_URL}</code>. Without a key it can look components up and request a key. To send reviews it needs the header <code>Authorization: Bearer cmr_your_key</code>; the server doesn't offer OAuth sign-in yet, so if your connector settings only offer OAuth, use the command line or the <a href="${FEEDBACK_HREF}">feedback form</a>.</p>
   ${h2('What your agent can do', 'tools')}
   ${table(['Tool', 'What it does'], [
+    ['<code>request_key</code>', 'Asks Commmerce to email you a key (works without one).'],
     ['<code>search_components</code>', 'Finds components for what a screen needs ("orders table with bulk actions").'],
     ['<code>get_component</code>', 'The full reference for one component: attributes, slots, events, examples, do and don\'t, docs link.'],
     ['<code>check_page</code>', 'Checks a running page on your machine (localhost works): Commmerce UI present and version, accessibility (axe-core), sideways scroll at 320, 390, 768 and 1280px, text under 12px, targets under 24px, native controls where a <code>cm-*</code> component exists. Nothing is sent.'],
@@ -1786,7 +1798,7 @@ npx @commmerce/review feedback --kind bug --title "Select clips at 320px" --body
     <li>It goes to Commmerce's review service over HTTPS and is stored privately. Commmerce reviews it (with the help of Claude, working only on what you sent) and the result comes back only to you.</li>
     <li>Screenshots and source files are deleted 30 days after the review is done. The findings are kept, so you can still read them.</li>
     <li>What we learn from reviews shapes new components and refinements. Anything published about it describes the need in general terms, with our own example: never your name, your product or your screens.</li>
-    <li>Keys, higher quotas and anything else about reviews: the <a href="${FEEDBACK_HREF}">feedback form</a>. General support: ${mail()}.</li>
+    <li>Higher quotas and anything else about reviews: the <a href="${FEEDBACK_HREF}">feedback form</a> (type Question). General support: ${mail()}.</li>
   </ul>` });
 
 pages['/apps/starter'] = () => ({ title: 'Starter app', html: `

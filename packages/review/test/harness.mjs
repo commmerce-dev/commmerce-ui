@@ -68,6 +68,12 @@ async function startFake() {
       const t = req.headers['x-status-token'] ?? url.searchParams.get('t');
       return it && it.token && t === it.token ? send(200, view(it)) : send(404, { error: { code: 'not_found', message: 'No review at this link.' } });
     }
+    if (path === '/mcp' && req.method === 'POST' && !auth && body.params?.name === 'request_key') {
+      const a = body.params.arguments ?? {};
+      const ok = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(a.email ?? '') && a.name && a.team;
+      const text = ok ? JSON.stringify({ status: 'pending', kind: /@(commmerce|outdoinc)\.com$/i.test(a.email) ? 'internal' : 'third-party', team: a.team, daily_quota: 10, message: 'Check your inbox. The key is never shown here.' }) : 'email is not a valid address';
+      return send(200, { jsonrpc: '2.0', id: body.id, result: { content: [{ type: 'text', text }], ...(ok ? {} : { isError: true }) } });
+    }
     if (auth !== adminKey && auth !== teamKey) return send(401, { error: { code: 'unauthorized', message: 'This key is not valid or has been revoked.' } });
     if (path === '/v1/reviews' && req.method === 'POST') {
       if (!body.app || (!body.url && !body.screens?.length)) return send(400, { error: { code: 'invalid', message: 'app and screens or url required' } });

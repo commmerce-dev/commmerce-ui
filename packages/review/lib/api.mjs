@@ -1,9 +1,9 @@
 // Client for the Commmerce review service (API v1). The key comes from COMMMERCE_REVIEW_KEY; keys are issued by
-// Commmerce on request, through the feedback form (type Question).
+// Commmerce by email: `commmerce-review key request` (or ask your agent: request_key).
 
 export const FEEDBACK_FORM = 'https://commmerce.com/commmerceui/#apps--feedback';
 export const DEFAULT_BASE = 'https://commmerce.com/commmerceui/api/v1';
-export const KEY_HELP = 'Set COMMMERCE_REVIEW_KEY to your review key. Keys are issued by Commmerce on request: send the feedback form with the type Question, https://commmerce.com/commmerceui/#apps--feedback';
+export const KEY_HELP = 'Set COMMMERCE_REVIEW_KEY to your review key. Get one by email: npx @commmerce/review key request --email you@company.com --name "Your name" --team "Your team"';
 
 export class ApiError extends Error {
   /** @param {number} status @param {string} code @param {string} message */
@@ -51,6 +51,23 @@ export function createClient(opts = {}) {
     requestComponent: (body) => call('POST', '/component-requests', body),
     /** @param {{kind: string, title: string, body: string, app?: string, images?: string[]}} body */
     sendFeedback: (body) => call('POST', '/feedback', body),
+    /**
+     * Asks Commmerce to email a key (no key needed). Goes through the remote MCP endpoint's request_key tool, which has
+     * the same rules and limits as the form. The answer never contains the key.
+     * @param {{email: string, name: string, team: string, kind?: string}} args
+     */
+    async requestKey(args) {
+      const mcpUrl = base.replace(/\/v1$/, '/mcp');
+      let res;
+      try {
+        res = await f(mcpUrl, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'request_key', arguments: args } }) });
+      } catch (e) { throw new ApiError(0, 'network', `Could not reach ${mcpUrl}: ${e instanceof Error ? e.message : e}`); }
+      const data = await res.json().catch(() => null);
+      const result = data?.result;
+      if (!res.ok || !result) throw new ApiError(res.status, 'http', data?.error?.message ?? `HTTP ${res.status}`);
+      if (result.isError) throw new ApiError(400, 'invalid', result.content?.[0]?.text ?? 'Request refused');
+      return JSON.parse(result.content[0].text);
+    },
   };
 }
 

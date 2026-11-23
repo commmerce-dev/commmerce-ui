@@ -12,7 +12,12 @@ Workflow:
 2. When a screen is done, run check_page on its URL (localhost works) and fix every blocker.
 3. Then call submit_review (screenshots are taken locally at 390, 768 and 1280px; demo data only) and poll get_review until the status is done. Apply each finding's fix (the Commmerce UI way, with the docs link) and resubmit with resubmission_of.
 4. Missing a component? request_component. Found a bug or have a suggestion? send_feedback.
-PRIVATE: everything sent through these tools (or the feedback form, https://commmerce.com/commmerceui/#apps--feedback) is seen only by Commmerce and your team, never published; replies come back only to you (get_review, or the form's private status link). Screenshots and source are deleted 30 days after the item is done. Public GitHub issues are optional, only for someone who wants to report a library bug in public. Keys are issued by Commmerce on request through the feedback form (type Question).`;
+PRIVATE: everything sent through these tools (or the feedback form, https://commmerce.com/commmerceui/#apps--feedback) is seen only by Commmerce and your team, never published; replies come back only to you (get_review, or the form's private status link). Screenshots and source are deleted 30 days after the item is done. Public GitHub issues are optional, only for someone who wants to report a library bug in public. No key yet? Ask the user for their work email, name and team, then call request_key: Commmerce emails the key with the command to add it.`;
+
+export const ANON_TOOLS = ['search_components', 'get_component', 'check_page', 'request_key'];
+export const ANON_INSTRUCTIONS = `Commmerce UI review tools, running without a key (COMMMERCE_REVIEW_KEY is not set). Commmerce UI is the design system for apps in the Commmerce admin (web components named cm-*).
+Available now: search_components and get_component (look components up BEFORE building UI), check_page (local, nothing is sent), and request_key.
+To send reviews and feedback the user needs a key: ask them for their work email, their name and their team (or app) name, then call request_key. Commmerce emails the key with the command to add it; it is never shown in this chat.`;
 
 const COMPONENT_HINT = 'Always look components up before building UI: Commmerce UI has ready-made, accessible cm-* components, and reviews flag native controls or custom CSS where a cm-* component exists.';
 
@@ -38,6 +43,13 @@ export function localTools(client) {
         if (!c) throw new Error(`No component "${name}". Closest: ${search(components(), name, 5).map((x) => x.tag).join(', ') || 'none'}. Use search_components.`);
         return c;
       },
+    },
+    {
+      name: 'request_key',
+      title: 'Request a review key',
+      description: 'Get a Commmerce UI review key for the user, by email. Ask the user for their work email, name and team (or app) name first: never guess them. Commmerce emails the key with the exact command to add it (it is never returned here). Work emails at commmerce.com or outdoinc.com get an internal key; others get a third-party key (10 reviews a day). Asking again for the same email and team replaces a key not yet delivered.',
+      inputSchema: { type: 'object', properties: { email: { type: 'string', description: "The user's work email address." }, name: { type: 'string', description: "The user's name." }, team: { type: 'string', description: 'Team or app name.' }, kind: { type: 'string', enum: ['internal', 'third-party'] } }, required: ['email', 'name', 'team'] },
+      handler: async (/** @type {any} */ a) => client.requestKey({ email: a.email, name: a.name, team: a.team, ...(a.kind ? { kind: a.kind } : {}) }),
     },
     {
       name: 'check_page',

@@ -8,7 +8,7 @@ import { prepareSubmission, DEMO_DATA_RULE } from './submit.mjs';
 import { mask } from './shoot.mjs';
 import { SetupError } from './browser.mjs';
 import { createMcp, serveStdio } from './mcp-protocol.mjs';
-import { localTools, INSTRUCTIONS } from './tools.mjs';
+import { localTools, INSTRUCTIONS, ANON_INSTRUCTIONS, ANON_TOOLS } from './tools.mjs';
 
 const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 
@@ -22,7 +22,8 @@ Public GitHub issues are optional, only if you want to report a library bug in p
 Usage: commmerce-review <command> [options]
 
 Commands
-  mcp                         Run the MCP server on stdio (for Claude Code, Codex and other agents).
+  mcp                         Run the MCP server on stdio (for Claude Code, Codex and other agents). Without a key it
+                              offers component lookup, check_page and request_key.
   check <url>                 Check a running page locally (no AI, nothing is sent): Commmerce UI present and version,
                               axe-core, sideways scroll at 320/390/768/1280px, text under 12px, targets under 24px,
                               native controls where a cm-* component exists. Exits 1 on blockers (use it in CI).
@@ -40,15 +41,16 @@ Commands
   status <id>                 Show a review, component request or feedback item.
   wait <id>                   Poll until done. Exits 0 approved, 1 changes needed / needs a component / failed,
       --timeout <s>           3 timed out (default 1800s). --json for JSON.
+  key request                 Get a review key by email (no key needed). Commmerce emails it with the command to add it.
+      --email <work email> --name <name> --team <team or app> [--kind internal|third-party]
   request-component           Ask for a component Commmerce UI doesn't have.
       --name <n> --need <text> --app <name> [--example <text or @file>]
   feedback                    Report a bug, suggest a refinement or ask a question.
       --kind bug|refinement|question --title <t> --body <text or @file> [--app <name>]
 
 Environment
-  COMMMERCE_REVIEW_KEY        your key (submit, status, wait, request-component, feedback). Keys are issued by
-                              Commmerce on request: send the feedback form (type Question). check and
-                              component lookup need no key.
+  COMMMERCE_REVIEW_KEY        your key (submit, status, wait, request-component, feedback). Get one with
+                              \`commmerce-review key request\`. check and component lookup need no key.
   COMMMERCE_REVIEW_URL        API base (default https://commmerce.com/commmerceui/api/v1)
 
 Docs: https://commmerce.com/commmerceui/#apps--review
@@ -86,7 +88,10 @@ export async function main(argv) {
       case undefined: case 'help': case '--help': case '-h': out(HELP); return 0;
       case '--version': case '-v': case 'version': out(VERSION); return 0;
       case 'mcp': {
-        const handle = createMcp({ name: 'commmerce-review', version: VERSION, instructions: INSTRUCTIONS, tools: localTools(createClient()) });
+        const client = createClient();
+        // Without a key: look components up, check pages locally, and request a key.
+        const tools = localTools(client).filter((t) => client.hasKey || ANON_TOOLS.includes(t.name));
+        const handle = createMcp({ name: 'commmerce-review', version: VERSION, instructions: client.hasKey ? INSTRUCTIONS : ANON_INSTRUCTIONS, tools });
         await serveStdio(handle);
         return 0;
       }
@@ -126,6 +131,13 @@ export async function main(argv) {
         if (!v.wait) { out(v.json ? JSON.stringify(res, null, 2) : `Submitted privately: ${res.id}\nOnly Commmerce and your team see it. Result: commmerce-review wait ${res.id}`); return 0; }
         err(`Submitted privately: ${res.id}. Waiting for the review...`);
         return await doWait(client, res.id, Number(v.timeout ?? 1800), !!v.json);
+      }
+      case 'key': {
+        const { values: v, positionals: [sub] } = parse({ email: { type: 'string' }, name: { type: 'string' }, team: { type: 'string' }, kind: { type: 'string' } });
+        if (sub !== 'request' || !v.email || !v.name || !v.team) { err('usage: commmerce-review key request --email <work email> --name <name> --team <team or app> [--kind internal|third-party]'); return 2; }
+        const res = await createClient().requestKey({ email: String(v.email), name: String(v.name), team: String(v.team), ...(v.kind ? { kind: String(v.kind) } : {}) });
+        out(v.json ? JSON.stringify(res, null, 2) : `${res.message}\nKind: ${res.kind}, team ${res.team}, ${res.daily_quota} submissions a day.`);
+        return 0;
       }
       case 'status': {
         const { values: v, positionals: [id] } = parse({});

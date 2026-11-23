@@ -22,7 +22,7 @@ after(() => { svc.close(); site.close(); });
 
 test('no key: clear message, exit 2', async () => {
   const r = await cli(['status', 'rv_x'], { COMMMERCE_REVIEW_KEY: '', COMMMERCE_REVIEW_URL: `${svc.base}/v1` });
-  assert.equal(r.code, 2); assert.match(r.stderr, /COMMMERCE_REVIEW_KEY.*#apps--feedback/s);
+  assert.equal(r.code, 2); assert.match(r.stderr, /COMMMERCE_REVIEW_KEY.*key request/s);
   const bad = await cli(['status', 'rv_x'], { ...env, COMMMERCE_REVIEW_KEY: 'cmr_wrong' });
   assert.equal(bad.code, 2); assert.match(bad.stderr, /not valid/);
 });
@@ -92,7 +92,7 @@ test('stdio MCP server: tools work through the protocol', async () => {
     assert.match(init.result.instructions, /BEFORE building/); assert.match(init.result.instructions, /PRIVATE/);
     child.stdin.write('{"jsonrpc":"2.0","method":"notifications/initialized"}\n');
     const tools = (await rpc('tools/list')).result.tools;
-    assert.deepEqual(tools.map((t) => t.name), ['search_components', 'get_component', 'check_page', 'submit_review', 'get_review', 'request_component', 'send_feedback']);
+    assert.deepEqual(tools.map((t) => t.name), ['search_components', 'get_component', 'request_key', 'check_page', 'submit_review', 'get_review', 'request_component', 'send_feedback']);
     assert.match(tools.find((t) => t.name === 'search_components').description, /look components up before building/);
     assert.match(tools.find((t) => t.name === 'submit_review').description, /PRIVATE/);
     assert.equal(JSON.parse((await call('search_components', { query: 'save bar' })).content[0].text).components[0].tag, 'cm-save-bar');
@@ -106,5 +106,36 @@ test('stdio MCP server: tools work through the protocol', async () => {
     assert.equal(JSON.parse((await call('get_review', { id: sub.id })).content[0].text).status, 'queued');
     assert.match(JSON.parse((await call('request_component', { name: 'X', need: 'Y', app: 'Z' })).content[0].text).id, /^cr_/);
     assert.match(JSON.parse((await call('send_feedback', { kind: 'question', title: 'Q', body: 'B' })).content[0].text).id, /^fb_/);
+  } finally { child.kill(); }
+});
+
+test('key request: by email through the remote request_key, never prints a key; bad input exits 2', async () => {
+  const r = await cli(['key', 'request', '--email', 'dev@acme-shop.com', '--name', 'Dev', '--team', 'Orders app'], { COMMMERCE_REVIEW_KEY: '', COMMMERCE_REVIEW_URL: `${svc.base}/v1` });
+  if (svc.kind === 'real') {
+    // The real service checks MX records: acme-shop.com may not have one, so accept either answer but never a key.
+    assert.ok(!/cm[ar]_/.test(r.stdout + r.stderr));
+  } else {
+    assert.equal(r.code, 0, r.stderr); assert.match(r.stdout, /Check your inbox/); assert.match(r.stdout, /third-party/);
+    assert.ok(!/cm[ar]_/.test(r.stdout));
+  }
+  const bad = await cli(['key', 'request', '--email', 'nope', '--name', 'D', '--team', 'T'], { COMMMERCE_REVIEW_KEY: '', COMMMERCE_REVIEW_URL: `${svc.base}/v1` });
+  assert.equal(bad.code, 2); assert.match(bad.stderr, /email/);
+  assert.equal((await cli(['key', 'request'], {})).code, 2);
+});
+
+test('stdio MCP without a key: lookup, check_page and request_key only', async () => {
+  const child = spawn(process.execPath, [join(import.meta.dirname, '..', 'bin', 'commmerce-review.mjs'), 'mcp'], { env: { ...process.env, COMMMERCE_REVIEW_KEY: '', COMMMERCE_REVIEW_URL: `${svc.base}/v1` } });
+  let buf = ''; const waiting = new Map();
+  child.stdout.on('data', (d) => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { const m = JSON.parse(buf.slice(0, i)); buf = buf.slice(i + 1); waiting.get(m.id)?.(m); } });
+  let n = 0;
+  const rpc = (method, params) => new Promise((r) => { const id = ++n; waiting.set(id, r); child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
+  try {
+    const init = await rpc('initialize', { protocolVersion: '2025-06-18' });
+    assert.match(init.result.instructions, /without a key/); assert.match(init.result.instructions, /request_key/);
+    assert.deepEqual((await rpc('tools/list')).result.tools.map((t) => t.name), ['search_components', 'get_component', 'request_key', 'check_page']);
+    if (svc.kind === 'fake') {
+      const r = await rpc('tools/call', { name: 'request_key', arguments: { email: 'a@commmerce.com', name: 'A', team: 'Connect' } });
+      assert.equal(JSON.parse(r.result.content[0].text).kind, 'internal');
+    }
   } finally { child.kill(); }
 });

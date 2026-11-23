@@ -12,12 +12,20 @@ Docs: https://commmerce.com/commmerceui/#apps--review
 
 ## Key
 
-`submit`, `status`, `wait`, `request-component` and `feedback` need a review key in `COMMMERCE_REVIEW_KEY`. Keys are
-issued by Commmerce on request: send the feedback form (type Question). `check` and the component lookup need no key.
+`submit`, `status`, `wait`, `request-component` and `feedback` need a review key in `COMMMERCE_REVIEW_KEY`. Get one by
+email: `npx @commmerce/review key request --email you@company.com --name "Your name" --team "Your team"` (or ask your
+agent: the MCP server's `request_key`). `check` and the component lookup need no key.
 
 ## Agents
 
-Claude Code:
+Claude Code, one command, no key needed:
+
+```sh
+claude mcp add --transport http commmerce-review https://commmerce.com/commmerceui/api/mcp
+```
+
+Then ask Claude for a key ("Get me a Commmerce UI review key: my email is ..., team ..."). Commmerce emails it with the
+command that adds it. The local server (also checks pages and takes screenshots on your machine):
 
 ```sh
 claude mcp add commmerce-review --env COMMMERCE_REVIEW_KEY=cmr_your_key -- npx -y @commmerce/review mcp
@@ -35,7 +43,7 @@ env = { COMMMERCE_REVIEW_KEY = "cmr_your_key" }
 Remote MCP server (Streamable HTTP, same tools; `check_page` there explains how to run the check locally):
 `https://commmerce.com/commmerceui/api/mcp` with the header `Authorization: Bearer cmr_your_key`.
 
-Tools: `search_components`, `get_component`, `check_page`, `submit_review`, `get_review`, `request_component`, `send_feedback`.
+Tools: `request_key`, `search_components`, `get_component`, `check_page`, `submit_review`, `get_review`, `request_component`, `send_feedback`.
 
 ## Command line
 
@@ -46,6 +54,7 @@ Tools: `search_components`, `get_component`, `check_page`, `submit_review`, `get
 npx @commmerce/review check http://localhost:5173/orders           # exits 1 on blockers; --json, --strict
 npx @commmerce/review submit http://localhost:5173 --app "Orders app" --screen orders=/orders --wait
 npx @commmerce/review submit --images orders@390=phone.png orders@1280=desktop.png --app "Orders app"
+npx @commmerce/review key request --email you@company.com --name "Your name" --team "Orders app"
 npx @commmerce/review status rv_abc123
 npx @commmerce/review request-component --name "Swimlanes" --need "Group board columns by owner" --app "CRM"
 npx @commmerce/review feedback --kind bug --title "Select clips at 320px" --body "Steps: ..."
