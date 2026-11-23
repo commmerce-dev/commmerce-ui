@@ -435,6 +435,8 @@ h1 cm-badge { vertical-align: middle; margin-left: var(--cm-space-8); }
 .rv-hp { position: absolute; inset-inline-start: -10000px; inline-size: 1px; block-size: 1px; overflow: hidden; }
 #fb-result:empty { display: none; }
 .fb-field[hidden] { display: none; }
+.fb-turnstile:empty { display: none; }
+.fb-turnstile { max-inline-size: 100%; }
 .rv-link { overflow-wrap: anywhere; margin: var(--cm-space-8) 0 0; }
 .rv-status { border: 1px solid var(--cm-border-subtle); border-radius: var(--cm-radius-md); padding: var(--cm-space-16); margin: var(--cm-space-16) 0; overflow-wrap: anywhere; }
 .rv-status-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cm-space-8); }

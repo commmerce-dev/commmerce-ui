@@ -155,3 +155,24 @@ test('service errors are shown, and the form stays filled in', { skip }, async (
   assert.equal(await page.locator('#fb-send').getAttribute('loading'), null, 'loading state cleared');
   await page.close();
 });
+
+test('Turnstile: when the service has it on, the widget is rendered and its token is sent (Cloudflare stubbed)', { skip }, async () => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 900 } });
+  await page.route('**/public/config', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ turnstile: { site_key: '0xTEST', action: 'feedback' } }) }));
+  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', (r) => r.fulfill({ contentType: 'text/javascript', body: `
+    window.turnstile = { _token: '', render(el, o) { window.__ts = o; el.textContent = 'challenge'; setTimeout(() => { this._token = 'tok-' + o.sitekey; }, 300); return 'w1'; },
+      getResponse() { return this._token; }, reset() { this._token = ''; window.__resets = (window.__resets || 0) + 1; } };` }));
+  await page.goto(`${site.base}/commmerceui/dev.html#apps--feedback`);
+  await page.waitForFunction(() => window.__ts);
+  assert.deepEqual(await page.evaluate(() => ({ sitekey: window.__ts.sitekey, action: window.__ts.action })), { sitekey: '0xTEST', action: 'feedback' });
+  await page.waitForFunction(() => customElements.get('cm-radio-group'));
+  await pick(page, 'question');
+  await sender(page);
+  await fill(page, 'title', 'Review key'); await fill(page, 'question', 'Can the Connect team have a key?');
+  await page.waitForFunction(() => window.turnstile.getResponse());
+  const reqP = page.waitForRequest((r) => r.url().endsWith('/public/feedback'));
+  await page.click('#fb-send');
+  assert.equal(JSON.parse((await reqP).postData()).turnstile_token, 'tok-0xTEST');
+  await page.waitForSelector('#fb-sent');
+  await page.close();
+});

@@ -1594,6 +1594,7 @@ const feedbackForm = `<form id="fb-form" class="rv-form" novalidate>
     <cm-text-field name="key" label="Review key (optional)" autocomplete="off" help-text="If Commmerce gave your team a key, add it: what you send is then shared with your team."></cm-text-field>
     <div class="rv-hp" aria-hidden="true" inert><label>Leave this empty <input name="website" tabindex="-1" autocomplete="off"></label></div>
     <cm-checkbox name="demo" required label="Screenshots and pages show demo data only" description="No real customer names, emails, phone numbers or addresses."></cm-checkbox>
+    <div id="fb-turnstile" class="fb-turnstile"></div>
     <div id="fb-result" role="status"></div>
     <div><cm-button id="fb-send" type="submit" variant="primary">Send privately</cm-button></div>
   </form>`;
@@ -1637,6 +1638,24 @@ pages['/apps/feedback'] = (params) => ({ title: 'Send feedback', html: `
     };
     typeGroup.addEventListener('change', adapt);
     adapt();
+    // Cloudflare Turnstile (anti-spam) when the review service has it on: GET /public/config names the site key.
+    // Loaded only on this page, rendered explicitly, managed mode; its token goes with the submission.
+    let challenge = null;
+    // Only where the API is same-origin (commmerce.com, blog.commmerce.com): elsewhere the browser blocks it anyway.
+    (api.startsWith('/') ? fetch(`${api}/public/config`) : Promise.reject(new Error('cross-origin'))).then((r) => (r.ok ? r.json() : {})).then((cfg) => {
+      if (!cfg.turnstile || !form.isConnected) return;
+      const render = () => {
+        const box = $('#fb-turnstile', main);
+        if (!box || !window.turnstile) return;
+        challenge = window.turnstile.render(box, { sitekey: cfg.turnstile.site_key, action: cfg.turnstile.action, theme: 'auto', size: innerWidth < 360 ? 'compact' : 'flexible' });
+      };
+      if (window.turnstile) { render(); return; }
+      const sc = document.createElement('script');
+      sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      sc.async = true;
+      sc.addEventListener('load', render);
+      document.head.append(sc);
+    }).catch(() => { /* no config: the service decides */ });
     const readImage = (file) => new Promise((resolve, reject) => {
       const fr = new FileReader();
       fr.addEventListener('load', async () => {
@@ -1657,10 +1676,12 @@ pages['/apps/feedback'] = (params) => ({ title: 'Send feedback', html: `
       if (!form.checkValidity()) { form.reportValidity(); show('critical', 'Fill in the required fields.'); return; }
       if (t === 'review' && !val('url') && !files.length) { show('critical', 'Add the URL of your build or at least one screenshot.'); return; }
       if (files.length > 12) { show('critical', 'Add at most 12 screenshots.'); return; }
+      const turnstileToken = challenge !== null ? window.turnstile.getResponse(challenge) : undefined;
+      if (challenge !== null && !turnstileToken) { show('critical', 'Wait for the anti-spam check above to finish, then send again.'); return; }
       send.loading = true;
       try {
         const images = await Promise.all(files.map(readImage));
-        const common = { name: val('name'), email: val('email'), app: val('app'), submitter_kind: val('submitter_kind'), key: val('key') || undefined, website: val('website') || undefined };
+        const common = { name: val('name'), email: val('email'), app: val('app'), submitter_kind: val('submitter_kind'), key: val('key') || undefined, website: val('website') || undefined, turnstile_token: turnstileToken };
         let path, body;
         if (t === 'review') {
           path = 'public/reviews';
@@ -1681,6 +1702,7 @@ pages['/apps/feedback'] = (params) => ({ title: 'Send feedback', html: `
           <p class="rv-link"><a href="${esc(out.status_url)}">${esc(out.status_url)}</a></p></cm-banner></div>`);
       } catch (err) {
         show('critical', esc(err instanceof TypeError ? 'Could not reach Commmerce. Check your connection and try again.' : err.message));
+        if (challenge !== null) window.turnstile.reset(challenge); // a token is good for one submission
       } finally {
         send.loading = false;
       }
