@@ -1,9 +1,9 @@
 <?php
 // Downloads one pinned version of the Commmerce UI hosted build into vendor/.
 // Pinned files never change; raise the version after reading the release notes.
-//   php fetch-vendor.php            (or COMMMERCE_UI_VERSION=1.20.2 php fetch-vendor.php)
+//   php fetch-vendor.php            (or COMMMERCE_UI_VERSION=1.20.4 php fetch-vendor.php)
 
-$version = getenv('COMMMERCE_UI_VERSION') ?: '1.20.2';
+$version = getenv('COMMMERCE_UI_VERSION') ?: '1.20.4';
 $base = "https://cdn.commmerce.com/commmerceui/v/$version";
 @mkdir(__DIR__ . '/vendor');
 $download = function (string $file) use ($base, $version): string {
