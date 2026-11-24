@@ -736,3 +736,16 @@ describe('cm-calendar day start after loading (issue #34)', () => {
     expect(Math.round(tg.scrollTop / cell.offsetHeight)).toBe(6);
   });
 });
+
+describe('cm-calendar: chip text with a label', () => {
+  const labelled = ev('s1', 'Summer sale reel', '2026-11-18T10:00', '2026-11-18T10:30', 'label="Summer sale reel, scheduled, 10:00"');
+  for (const view of ['week', 'month', 'day']) {
+    it(`draws the heading, not the label, in the ${view} view`, async () => {
+      const c = await mount(cal(`view="${view}"`, labelled));
+      const x = chip(c, 's1');
+      expect(x).toBeTruthy();
+      expect(x.querySelector('.h')!.textContent).toBe('Summer sale reel');
+      expect(x.getAttribute('aria-label')).toContain('scheduled');
+    });
+  }
+});
