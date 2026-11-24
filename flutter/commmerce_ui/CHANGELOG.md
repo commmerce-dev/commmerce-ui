@@ -3,6 +3,10 @@
 The Flutter package shares its version number with the Commmerce UI web packages. Full release notes:
 https://commmerce.com/blog/commmerceui/#releases
 
+## 1.20.4
+
+* No scrollbars: `CmTheme` hides scrollbars (areas still scroll), and `CmDataTable` no longer adds its own.
+
 ## 1.20.3
 
 * No Flutter changes (web: the app frame side navigation scrolls without a visible scrollbar).

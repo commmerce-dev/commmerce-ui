@@ -1,6 +1,13 @@
 // Release notes, newest first. Cloud build sessions add an entry here when a batch ships
 // (an <h2 id="vX-Y-Z"> heading and a list). Plain HTML; internal links use href="#/path".
 export const releaseNotes = `
+  <h2 id="v1-20-4">v1.20.4</h2>
+  <ul>
+    <li><strong>No scrollbars.</strong> Every component's scroll area (data table, menus, dropdowns, date range picker, calendar, command palette, panels, link tabs and status tabs) still scrolls with the wheel, trackpad, touch and keyboard, but no longer draws a scrollbar. On Windows and on Macs set to always show scrollbars, the bar took width as it appeared and moved the layout. Overflow is shown the way it already was: fades at the edges and "more" hints.</li>
+    <li><a href="#/components/modal">Modal</a>, side panel, filter panel, bottom sheet, notification panel and command palette: when they open on a page that shows a scrollbar, the page keeps the scrollbar's space, so it no longer jumps sideways.</li>
+    <li><a href="#/components/app-frame">App frame</a>: the <a href="#/components/mobile-menu">mobile menu</a> also scrolls without a visible scrollbar now, like the side navigation in 1.20.3. Where scrollbars are always shown (a narrow desktop window on Windows, or a Mac set to always show them), the bar no longer takes width from the menu.</li>
+    <li>Flutter: <code>CmTheme</code> hides scrollbars, and <code>CmDataTable</code> no longer adds its own.</li>
+  </ul>
   <h2 id="v1-20-3">v1.20.3</h2>
   <ul>
     <li><a href="#/components/app-frame">App frame</a>: the side navigation column still scrolls when it is taller than the window, but no longer shows a scrollbar. On Windows and on Macs set to always show scrollbars, the bar took width from the column and moved the layout when the menu grew or shrank.</li>

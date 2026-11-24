@@ -98,8 +98,10 @@ export class CmAppFrame extends LitElement {
       ::slotted([slot='bottom-navigation']) { position: static; }
       .menu {
         position: fixed; inset: 0; z-index: 35; overflow-y: auto; overscroll-behavior: contain;
+        scrollbar-width: none; /* scrolls without a scrollbar, like .nav */
         padding-block: env(safe-area-inset-top, 0px) var(--_bottom); background: var(--cm-bg-page);
       }
+      .menu::-webkit-scrollbar { display: none; }
       .probe { block-size: 0; }
       [hidden] { display: none !important; }
     `,
