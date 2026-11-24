@@ -3,6 +3,10 @@
 The Flutter package shares its version number with the Commmerce UI web packages. Full release notes:
 https://commmerce.com/blog/commmerceui/#releases
 
+## 1.21.0
+
+* No Flutter API changes. `CmAppFrame` docs: pass `selectedId: open ? 'more' : page` to `CmBottomNavigation` so "More" shows as the current tab while the mobile menu is open (web: `cm-bottom-navigation` gains `menu-item` and `menu-open`; calendar chip text fix).
+
 ## 1.20.4
 
 * No scrollbars: `CmTheme` hides scrollbars (areas still scroll), and `CmDataTable` no longer adds its own.

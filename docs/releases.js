@@ -1,6 +1,11 @@
 // Release notes, newest first. Cloud build sessions add an entry here when a batch ships
 // (an <h2 id="vX-Y-Z"> heading and a list). Plain HTML; internal links use href="#/path".
 export const releaseNotes = `
+  <h2 id="v1-21-0">v1.21.0</h2>
+  <ul>
+    <li><a href="#/components/bottom-navigation">Bottom navigation</a>: <code>menu-item</code> and <code>menu-open</code> (new). While the <a href="#/components/mobile-menu">mobile menu</a> is open, the "More" tab is highlighted as the current tab and reports <code>aria-expanded</code>; before, the page's own tab stayed highlighted under the open menu. The page's tab keeps <code>aria-current</code>, so screen readers still hear which page is open. The <a href="#/components/app-frame">app frame</a> with <code>menu-item</code> sets both for you, so frames like the CRM's get this with no changes. Flutter: pass <code>selectedId: open ? 'more' : page</code> to <code>CmBottomNavigation</code>.</li>
+    <li>Fix: <a href="#/components/calendar">calendar</a> event chips show the event's <code>heading</code> again when it also has a <code>label</code>. The chip showed the <code>label</code>, which is written for screen readers (for example "Summer sale reel, scheduled, 10:00"). Screen readers still hear the <code>label</code>.</li>
+  </ul>
   <h2 id="v1-20-4">v1.20.4</h2>
   <ul>
     <li><strong>No scrollbars.</strong> Every component's scroll area (data table, menus, dropdowns, date range picker, calendar, command palette, panels, link tabs and status tabs) still scrolls with the wheel, trackpad, touch and keyboard, but no longer draws a scrollbar. On Windows and on Macs set to always show scrollbars, the bar took width as it appeared and moved the layout. Overflow is shown the way it already was: fades at the edges and "more" hints.</li>

@@ -1,6 +1,6 @@
 {
   "name": "@commmerce/ui-react",
-  "version": "1.20.4",
+  "version": "1.21.0",
   "description": "React components for Commmerce UI, generated from the web components.",
   "keywords": [
     "react",
@@ -44,7 +44,7 @@
     "test:react19": "npm ci --prefix react19 --no-audit --no-fund && vitest run --config vitest.react19.config.ts"
   },
   "dependencies": {
-    "@commmerce/ui": "1.20.4",
+    "@commmerce/ui": "1.21.0",
     "@lit/react": "1.0.6"
   },
   "peerDependencies": {
