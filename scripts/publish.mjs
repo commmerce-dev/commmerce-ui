@@ -31,6 +31,10 @@ for (const n of names) {
     try { execSync(`npm view @commmerce/${n} name`, { stdio: 'ignore' }); }
     catch { console.warn(`::warning::@commmerce/${n} is not on npm yet: publish it once by hand and add its trusted publisher. Skipped.`); continue; }
   }
+  // Already on npm at this version (e.g. a new package's first publish was done by hand): skip instead of failing.
+  let published = '';
+  try { published = execSync(`npm view @commmerce/${n}@${version} version`, { stdio: 'pipe' }).toString().trim(); } catch {}
+  if (published === version) { console.log(`@commmerce/${n}@${version} is already on npm. Skipped.`); continue; }
   run(`npm publish --workspace @commmerce/${n} --access public${tag}${yes ? '' : ' --dry-run'}`);
 }
 console.log(yes ? `Published ${version}. Tag it: git tag v${version} && git push --tags` : 'Dry run complete. Re-run with --yes to publish.');

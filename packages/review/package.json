@@ -22,7 +22,7 @@
   },
   "type": "module",
   "bin": {
-    "commmerce-review": "./bin/commmerce-review.mjs"
+    "commmerce-review": "bin/commmerce-review.mjs"
   },
   "exports": {
     ".": "./lib/index.mjs",
