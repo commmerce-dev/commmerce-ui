@@ -785,7 +785,7 @@ class _CmDataTableState extends State<CmDataTable> {
       Widget vertical(Widget child) => widget.stickyHeader && widget.maxHeight != null
           ? ConstrainedBox(
               constraints: BoxConstraints(maxHeight: widget.maxHeight!),
-              child: Scrollbar(controller: _v, child: SingleChildScrollView(controller: _v, child: child)),
+              child: SingleChildScrollView(controller: _v, child: child),
             )
           : child;
 
@@ -802,17 +802,14 @@ class _CmDataTableState extends State<CmDataTable> {
 
       if (!widget.stickyFirstColumn || cols.length < 2 || low.isNotEmpty) {
         final footer = foot(idx);
-        return Scrollbar(
+        return SingleChildScrollView(
           controller: _hBody,
-          child: SingleChildScrollView(
-            controller: _hBody,
-            scrollDirection: Axis.horizontal,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              head(idx),
-              vertical(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [...body(idx, withDetails: low.isNotEmpty), if (showEmpty) emptyRow])),
-              ?footer,
-            ]),
-          ),
+          scrollDirection: Axis.horizontal,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            head(idx),
+            vertical(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [...body(idx, withDetails: low.isNotEmpty), if (showEmpty) emptyRow])),
+            ?footer,
+          ]),
         );
       }
 

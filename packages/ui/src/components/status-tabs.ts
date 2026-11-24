@@ -77,7 +77,7 @@ export class CmStatusTabs extends CmLocalizedElement {
       :host { display: block; }
       /* A 40px row: 14px labels (medium; semibold when chosen) over a 2px underline on a hairline. */
       .tabs {
-        display: flex; gap: var(--cm-space-24); overflow-x: auto; scrollbar-width: thin; padding: 2px 2px 0;
+        display: flex; gap: var(--cm-space-24); overflow-x: auto; padding: 2px 2px 0;
         scroll-snap-type: x proximity; scroll-padding-inline: var(--cm-space-24);
         font-size: var(--cm-font-size-14); line-height: var(--cm-line-height-14); font-weight: 500; white-space: nowrap;
         box-shadow: inset 0 calc(-1 * var(--cm-border-1)) 0 var(--cm-border-subtle);

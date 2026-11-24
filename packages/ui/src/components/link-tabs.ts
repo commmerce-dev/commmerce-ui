@@ -44,7 +44,7 @@ export class CmLinkTabs extends CmLocalizedElement {
     css`
       :host { display: block; }
       ul {
-        display: flex; gap: var(--cm-space-24); margin: 0; padding: 2px 2px 0; list-style: none; overflow-x: auto; scrollbar-width: thin;
+        display: flex; gap: var(--cm-space-24); margin: 0; padding: 2px 2px 0; list-style: none; overflow-x: auto;
         border-bottom: var(--cm-border-1) solid var(--cm-border-subtle); white-space: nowrap;
       }
       li { flex: none; display: flex; }

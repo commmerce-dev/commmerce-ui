@@ -9,6 +9,10 @@ export const base = css`
   }
   :host([hidden]) { display: none !important; }
   *, *::before, *::after { box-sizing: inherit; }
+  /* Scroll areas scroll, but never draw a scrollbar: a classic (always-on) scrollbar takes width as it appears and
+     shifts the layout. Overflow is shown instead by the component (fades, "more" hints, sticky edges). */
+  :host, * { scrollbar-width: none; }
+  ::-webkit-scrollbar { display: none; }
 `;
 
 export const focusRing = css`

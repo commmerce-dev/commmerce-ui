@@ -80,11 +80,8 @@ export class CmAppFrame extends LitElement {
         position: sticky; inset-block-start: var(--_header); box-sizing: border-box;
         max-block-size: calc(var(--cm-app-frame-height, 100dvh) - var(--_header));
         overflow-y: auto; overscroll-behavior: contain;
-        /* Scrolls, but no scrollbar: a classic (always-on) scrollbar takes width and shifts the layout. */
-        scrollbar-width: none;
         padding: var(--_gutter); padding-inline-end: 0;
       }
-      .nav::-webkit-scrollbar { display: none; }
       .frame { --_gutter: var(--cm-app-frame-gutter, var(--cm-space-20)); }
       main { display: block; min-inline-size: 0; padding-block-end: calc(var(--_bottom) + var(--cm-app-frame-bottom-offset, 0px)); }
       /* Panel: the page in a white rounded card with a gutter on the grey page (the merchant dashboard frame). */

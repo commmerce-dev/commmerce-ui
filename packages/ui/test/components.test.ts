@@ -1801,3 +1801,22 @@ describe('cm-notification-panel', () => {
     el.close(); await el.updateComplete;
   });
 });
+
+describe('scrollbars', () => {
+  it('scroll areas scroll without drawing a scrollbar', async () => {
+    const el = await mount<CmLinkTabs>('<cm-link-tabs style="display:block;width:120px"><a href="#a">Overview</a><a href="#b">Orders</a><a href="#c">Customers</a></cm-link-tabs>');
+    const list = el.shadowRoot!.querySelector('ul, [role], div') as HTMLElement;
+    expect(getComputedStyle(list).scrollbarWidth).toBe('none');
+    expect(getComputedStyle(el).scrollbarWidth).toBe('none');
+  });
+  it('keeps the page gutter while an overlay locks scrolling', async () => {
+    const { lockScroll, unlockScroll } = await import('../src/overlay.js');
+    const root = document.documentElement;
+    lockScroll();
+    expect(root.style.overflow).toBe('hidden');
+    expect(root.style.scrollbarGutter).toBe(window.innerWidth - root.clientWidth > 0 ? 'stable' : '');
+    unlockScroll();
+    expect(root.style.overflow).toBe('');
+    expect(root.style.scrollbarGutter).toBe('');
+  });
+});

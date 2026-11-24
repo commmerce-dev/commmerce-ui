@@ -5,15 +5,26 @@ import './components/icon.js';
 
 let locks = 0;
 let savedOverflow = '';
-/** Stops the page behind an open overlay from scrolling. Counted, so stacked overlays unlock once. */
+let savedGutter = '';
+/**
+ * Stops the page behind an open overlay from scrolling. Counted, so stacked overlays unlock once. When the page shows a
+ * classic (always-on) scrollbar, its gutter is kept while locked so the page doesn't jump sideways as it disappears.
+ */
 export function lockScroll() {
   if (locks++ === 0) {
-    savedOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = 'hidden';
+    const root = document.documentElement;
+    savedOverflow = root.style.overflow;
+    savedGutter = root.style.scrollbarGutter;
+    if (window.innerWidth - root.clientWidth > 0) root.style.scrollbarGutter = 'stable';
+    root.style.overflow = 'hidden';
   }
 }
 export function unlockScroll() {
-  if (locks > 0 && --locks === 0) document.documentElement.style.overflow = savedOverflow;
+  if (locks > 0 && --locks === 0) {
+    const root = document.documentElement;
+    root.style.overflow = savedOverflow;
+    root.style.scrollbarGutter = savedGutter;
+  }
 }
 
 /** The focused element, looking inside shadow roots. */

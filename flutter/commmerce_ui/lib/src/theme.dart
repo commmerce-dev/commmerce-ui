@@ -77,6 +77,12 @@ class CmTheme extends ThemeExtension<CmTheme> {
       ),
       dialogTheme: DialogThemeData(backgroundColor: c.bgSurface),
       datePickerTheme: cmDatePickerTheme(c),
+      // No scrollbars (owner, 24 Nov 2026): scroll areas scroll, but never draw a bar.
+      scrollbarTheme: const ScrollbarThemeData(
+        thickness: WidgetStatePropertyAll(0),
+        thumbVisibility: WidgetStatePropertyAll(false),
+        trackVisibility: WidgetStatePropertyAll(false),
+      ),
       extensions: [CmTheme(colors: c, brightness: b)],
     );
   }
