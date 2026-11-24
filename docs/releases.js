@@ -1,6 +1,10 @@
 // Release notes, newest first. Cloud build sessions add an entry here when a batch ships
 // (an <h2 id="vX-Y-Z"> heading and a list). Plain HTML; internal links use href="#/path".
 export const releaseNotes = `
+  <h2 id="v1-20-3">v1.20.3</h2>
+  <ul>
+    <li><a href="#/components/app-frame">App frame</a>: the side navigation column still scrolls when it is taller than the window, but no longer shows a scrollbar. On Windows and on Macs set to always show scrollbars, the bar took width from the column and moved the layout when the menu grew or shrank.</li>
+  </ul>
   <h2 id="v1-20-2">v1.20.2</h2>
   <ul>
     <li>No changes to the components. Tests: the command palette, photo upload and combobox focus and hover checks run in Firefox again (they were skipped in 1.20.1 after the test tools upgrade), so every component is tested in Chromium, Firefox and WebKit.</li>

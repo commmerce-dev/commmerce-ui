@@ -1,6 +1,6 @@
 {
   "name": "@commmerce/tokens",
-  "version": "1.20.2",
+  "version": "1.20.3",
   "description": "Design tokens for Commmerce UI: colours, type, spacing, radii and shadows as CSS variables, JSON and JS, in light and dark.",
   "keywords": [
     "design-tokens",
