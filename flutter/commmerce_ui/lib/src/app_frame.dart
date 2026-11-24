@@ -15,7 +15,8 @@ import 'theme.dart';
 ///
 /// [mobileMenu] covers the header and the page, above them and below the bottom navigation, while [menuOpen] is
 /// true on a narrow frame. Open it from the bottom navigation's "More" item (`onSelected: (i) => i.id == 'more'
-/// ? setState(() => open = !open) : …`). Focus moves into the menu when it opens and back to where it was when it
+/// ? setState(() => open = !open) : …`), and pass `selectedId: open ? 'more' : page` so "More" shows as the current tab
+/// while the menu is open. Focus moves into the menu when it opens and back to where it was when it
 /// closes; Esc asks [onMenuOpenChanged] to close it. While it is open, the header and page can't be reached
 /// with the keyboard or a screen reader, as with `inert` on the web.
 ///

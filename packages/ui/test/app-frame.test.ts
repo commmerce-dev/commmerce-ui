@@ -209,6 +209,27 @@ describe('cm-app-frame at 390px', () => {
     expect(toggles).toEqual([true, false, true, false]);
   });
 
+  it('with menu-item, More shows as the current tab and expanded while the menu is open', async () => {
+    const el = await mount(markup('menu-item="more"'));
+    const nav = bottomNav(el);
+    const tabs = () => [...nav.shadowRoot!.querySelectorAll('.item')] as HTMLElement[];
+    await nav.updateComplete;
+    const more = tabs()[2];
+    const pageTab = tabs().find((i) => i.getAttribute('aria-current') === 'page')!;
+    expect(more.getAttribute('aria-expanded')).toBe('false');
+    expect(pageTab.classList.contains('on')).toBe(true);
+    el.openMenu(); await el.updateComplete; await nav.updateComplete;
+    expect(tabs()[2].classList.contains('on')).toBe(true);
+    expect(tabs()[2].getAttribute('aria-expanded')).toBe('true');
+    expect(getComputedStyle(tabs()[2]).fontWeight).toBe('600');
+    expect(tabs().filter((i) => i.classList.contains('on'))).toHaveLength(1);
+    expect(pageTab.getAttribute('aria-current')).toBe('page');
+    el.closeMenu(); await el.updateComplete; await nav.updateComplete;
+    expect(tabs()[2].classList.contains('on')).toBe(false);
+    expect(tabs()[2].getAttribute('aria-expanded')).toBe('false');
+    expect(pageTab.classList.contains('on')).toBe(true);
+  });
+
   it('with menu-item, choosing a row in the menu or another tab closes the menu', async () => {
     const el = await mount(markup('menu-item="more"'));
     el.addEventListener('cm-navigate', (e) => e.preventDefault());

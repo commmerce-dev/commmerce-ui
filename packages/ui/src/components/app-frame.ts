@@ -154,6 +154,16 @@ export class CmAppFrame extends LitElement {
 
   updated(changed: Map<string, unknown>) {
     if (changed.has('_wide')) this.#heights();
+    if (changed.has('menuOpen') || changed.has('menuItem')) this.#syncBottom();
+  }
+
+  /** Tells the bottom navigation which item opens the menu and whether it is open, so that item shows as current. */
+  #syncBottom() {
+    if (!this.menuItem) return;
+    const bar = this.querySelector<HTMLElement & { menuItem: string; menuOpen: boolean }>(':scope > [slot="bottom-navigation"]');
+    if (!bar) return;
+    bar.menuItem = this.menuItem;
+    bar.menuOpen = this.menuOpen;
   }
 
   /** Opens the mobile menu and moves focus into it. */
@@ -212,7 +222,7 @@ export class CmAppFrame extends LitElement {
         <main part="main" ?inert=${covered}><slot></slot></main>
       </div>
       <div class="menu" part="mobile-menu" ?hidden=${!covered}><slot name="mobile-menu" @slotchange=${() => this.requestUpdate()}></slot></div>
-      <div class="bottom" part="bottom-navigation" ?hidden=${wide}><slot name="bottom-navigation"></slot></div>
+      <div class="bottom" part="bottom-navigation" ?hidden=${wide}><slot name="bottom-navigation" @slotchange=${() => this.#syncBottom()}></slot></div>
     </div>`;
   }
 }
