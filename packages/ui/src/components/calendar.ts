@@ -192,6 +192,8 @@ define('cm-calendar-event', CmCalendarEvent);
 /** An event read from its element: dates resolved, the days it shows on. */
 type Ev = {
   el: CmCalendarEvent; key: string; name: string; allDay: boolean;
+  /** The title drawn on the chip: `heading`, or the text. The `label` is only read by screen readers. */
+  text: string;
   /** Timed: start and end. All-day: the first and last day at midnight. */
   start: Date; end: Date;
   /** Minutes from midnight of the start day (timed). */
@@ -572,6 +574,7 @@ export class CmCalendar extends CmLocalizedElement {
 
   #parse(el: CmCalendarEvent): Ev | null {
     const name = el.name;
+    const text = el.heading || (el.textContent ?? '').replace(/\s+/g, ' ').trim() || name;
     const dateOnly = !!fromISO(el.start);
     const allDay = el.allDay || dateOnly;
     if (allDay) {
@@ -580,14 +583,14 @@ export class CmCalendar extends CmLocalizedElement {
       let e = fromISO(splitDateTime(el.end).date || el.end) ?? s;
       if (e < s) e = s;
       const n = Math.min(dayDiff(s, e), 366);
-      return { el, key: el.key, name, allDay, start: s, end: e, min: 0, dur: 1440, days: Array.from({ length: n + 1 }, (_, i) => toISO(addDays(s, i))) };
+      return { el, key: el.key, name, text, allDay, start: s, end: e, min: 0, dur: 1440, days: Array.from({ length: n + 1 }, (_, i) => toISO(addDays(s, i))) };
     }
     const s = fromISODateTime(el.start);
     if (!s) return null;
     let e = fromISODateTime(el.end);
     if (!e || e <= s) e = new Date(s.getTime() + 30 * 60000);
     const dur = Math.max(1, Math.round((e.getTime() - s.getTime()) / 60000));
-    return { el, key: el.key, name, allDay, start: s, end: e, min: s.getHours() * 60 + s.getMinutes(), dur, days: [toISO(s)] };
+    return { el, key: el.key, name, text, allDay, start: s, end: e, min: s.getHours() * 60 + s.getMinutes(), dur, days: [toISO(s)] };
   }
 
   #parsed(): Ev[] {
@@ -1363,8 +1366,8 @@ export class CmCalendar extends CmLocalizedElement {
     const kind = el.kind && (where !== 'month' || !el.icon) ? html`<span class="k">${el.kind}</span>` : nothing;
     const spin = busy ? html`<span class="spin" aria-hidden="true"></span>` : nothing;
     const body = where === 'time'
-      ? html`<span class="lead">${icon}${time}${spin}</span><span class="h">${ev.name}</span>${kind}`
-      : html`${icon}${time}<span class="h">${ev.name}</span>${kind}${spin}`;
+      ? html`<span class="lead">${icon}${time}${spin}</span><span class="h">${ev.text}</span>${kind}`
+      : html`${icon}${time}<span class="h">${ev.text}</span>${kind}${spin}`;
     const label = busy ? `${name}, ${this.t('saving')}` : name;
     const desc = movable ? `${this.#id}-mv` : `${this.#id}-op`;
     const k = `ev:${ev.key}:${iso}`;
@@ -1380,7 +1383,7 @@ export class CmCalendar extends CmLocalizedElement {
   }
 
   #placeholder(ev: Ev, cls = '', style?: string) {
-    return html`<div class="ph ${cls}" style=${style ?? nothing} aria-hidden="true">${ev.name}</div>`;
+    return html`<div class="ph ${cls}" style=${style ?? nothing} aria-hidden="true">${ev.text}</div>`;
   }
 
   #header(days: Date[]): TemplateResult {
