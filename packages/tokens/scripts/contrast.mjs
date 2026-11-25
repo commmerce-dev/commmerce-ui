@@ -36,7 +36,8 @@ const solid = (name, theme, base = 'bg-surface') => {
   return c[3] < 1 ? over(c, parse(value(base, theme))) : c;
 };
 
-// [foreground, [backgrounds], minimum]
+// [foreground, [backgrounds], minimum]. A background written `fill@ground` is the translucent fill laid over that
+// ground (default bg-surface): soft fills also sit on the page, inset areas and hovered rows.
 const TEXT = 4.5, UI = 3;
 const PAIRS = [
   ['text-default', ['bg-page', 'bg-surface', 'bg-hover', 'bg-inset', 'bg-input-filled', 'bg-tag', 'bg-attention', 'bg-information', 'bg-success', 'bg-critical', 'bg-error-bar'], TEXT],
@@ -74,6 +75,15 @@ const PAIRS = [
   ['accent-text', ['bg-surface', 'bg-page', 'accent-soft'], TEXT],
   ['text-default', ['bg-selected', 'accent-soft'], TEXT],
   ['text-tertiary', ['bg-selected'], TEXT],
+  // Soft status fills over every ground they sit on (badges, banners, calendar chips on grey pages and hovered rows).
+  ...['bg-page', 'bg-inset', 'bg-hover'].flatMap((g) => [
+    ['text-success', [`bg-success-soft@${g}`], TEXT],
+    ['text-information', [`bg-information-soft@${g}`], TEXT],
+    ['text-default', [`bg-success-soft@${g}`, `bg-information-soft@${g}`], TEXT],
+  ]),
+  ['text-attention', ['bg-attention-soft', 'bg-attention-soft@bg-page'], TEXT],
+  ['text-critical', ['bg-critical@bg-page', 'bg-error-bar@bg-page'], TEXT],
+  ['text-tertiary', ['bg-attention', 'bg-critical'], TEXT],         // secondary lines in tinted banners
 ];
 
 let failed = 0;
@@ -83,7 +93,8 @@ for (const l of looks) {
   for (const theme of themes) {
     for (const [fg, bgs, min] of PAIRS) {
       for (const bg of bgs) {
-        const b = solid(bg, theme);
+        const [fill, ground] = bg.split('@');
+        const b = solid(fill, theme, ground);
         const r = ratio(over(parse(value(fg, theme)), b), b);
         if (r < min) { failed++; console.error(`FAIL ${l ? `${l.id} ` : ''}${theme}: ${fg} on ${bg} = ${r.toFixed(2)} (needs ${min})`); }
       }

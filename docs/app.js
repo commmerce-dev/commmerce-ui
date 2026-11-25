@@ -2295,9 +2295,9 @@ pages['/foundations/accessibility'] = () => ({ title: 'Accessibility', html: `
   </ul>
   <p>Where a Figma colour was too light, it keeps its hue and is darkened only as far as needed:</p>
   ${table(['Token', 'Figma', 'Now', 'Contrast'], [
-    ['text-information', '#F18402', '#AD5500', '2.3 → 4.6:1'], ['text-success', '#61AD14', '#3C7C00', '2.5 → 4.7:1'],
+    ['text-information', '#F18402', '#A45100', '2.3 → 5.0:1'], ['text-success', '#61AD14', '#387300', '2.5 → 5.1:1'],
     ['text-speciality', '#1EC81A', '#008800', '2.3 → 4.6:1'], ['text-critical', '#E50000', '#DE0000', '4.4 → 4.6:1'],
-    ['text-attention', '#3274B6', '#2E6FAF', '4.3 → 4.6:1'], ['text-counter', '#3E6CFF', '#3B68F9', '4.4 → 4.6:1'],
+    ['text-attention', '#3274B6', '#2D6CAB', '4.3 → 4.8:1'], ['text-counter', '#3E6CFF', '#3B68F9', '4.4 → 4.6:1'],
     ['icon-default', '#9E9E9E', '#8B8B8B', '2.5 → 3.4:1'], ['border-input', '#D6D6D6', '#8B8B8B', '1.5 → 3.4:1'],
   ].map(([t, a, b, c]) => `<tr><td><code>${t}</code></td><td><span class="swatch" style="background:${a}"></span>${a}</td><td><span class="swatch" style="background:${b}"></span>${b}</td><td>${c}</td></tr>`), 'scroll')}
   ${h2('What the components do for you')}

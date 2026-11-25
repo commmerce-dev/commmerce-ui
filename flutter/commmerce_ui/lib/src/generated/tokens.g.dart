@@ -141,15 +141,15 @@ class CmColors {
   final Color textDefault;
   /// Disabled text ONLY (WCAG exempts disabled controls). Never for placeholders or copy: use text-tertiary.
   final Color textSecondary;
-  /// Help text, hints, breadcrumbs, placeholders (4.6:1 on bg-page; 6.4:1 dark).
+  /// Help text, hints, breadcrumbs, placeholders (4.8:1 on bg-page, 4.5:1 or more on tinted banners; 6.4:1 dark).
   final Color textTertiary;
-  /// Informational text. Figma #F18402 (2.3:1) darkened along its hue to 4.6:1 on its soft fill; dark uses Figma #F1A953.
+  /// Informational text. Figma #F18402 (2.3:1) darkened along its hue to 5.0:1 on its soft fill (4.5:1 or more with the fill over the page, inset or hover grounds); dark uses Figma #F1A953.
   final Color textInformation;
   /// Error messages. Figma #E50000 nudged to 4.6:1 on bg-critical.
   final Color textCritical;
-  /// Success text. Figma #61AD14 (2.5:1) darkened to 4.7:1 on its soft fill; dark uses Figma #81BB47.
+  /// Success text. Figma #61AD14 (2.5:1) darkened to 5.1:1 on its soft fill (4.5:1 or more with the fill over the page, inset or hover grounds); dark uses Figma #81BB47.
   final Color textSuccess;
-  /// Attention text and links. Figma #3274B6 nudged to 4.6:1 on bg-attention.
+  /// Attention text and links. Figma #3274B6 nudged to 4.8:1 on bg-attention (4.5:1 or more on bg-attention-soft too).
   final Color textAttention;
   /// Text on bg-dashboard, bg-flash-bar and primary buttons (the file's Basic text).
   final Color textOnDark;
@@ -275,11 +275,11 @@ class CmColors {
     iconRating: Color(0xFFFFC107),
     textDefault: Color(0xFF000000),
     textSecondary: Color(0xFF9E9E9E),
-    textTertiary: Color(0xFF707070),
-    textInformation: Color(0xFFAD5500),
+    textTertiary: Color(0xFF6D6D6D),
+    textInformation: Color(0xFFA45100),
     textCritical: Color(0xFFDE0000),
-    textSuccess: Color(0xFF3C7C00),
-    textAttention: Color(0xFF2E6FAF),
+    textSuccess: Color(0xFF387300),
+    textAttention: Color(0xFF2D6CAB),
     textOnDark: Color(0xFFFFFFFF),
     textOnDarkSecondary: Color(0xFFB5B5B5),
     textSpeciality: Color(0xFF008800),
