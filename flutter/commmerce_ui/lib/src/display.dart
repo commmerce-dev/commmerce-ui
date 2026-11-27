@@ -862,6 +862,8 @@ class _CmStatusTabsState extends State<CmStatusTabs> {
   final _scroll = ScrollController();
   final List<FocusNode> _nodes = [];
   final List<GlobalKey> _keys = [];
+  // Keeps the scroll view (and its offset) when the edge fade wraps it in a ShaderMask.
+  final _stripKey = GlobalKey();
   bool _moreStart = false, _moreEnd = false;
   int? _hover, _focused;
 
@@ -869,6 +871,13 @@ class _CmStatusTabsState extends State<CmStatusTabs> {
   void initState() {
     super.initState();
     _scroll.addListener(_measure);
+    _revealSelected(animate: false);
+  }
+
+  @override
+  void didUpdateWidget(CmStatusTabs old) {
+    super.didUpdateWidget(old);
+    if (old.value != widget.value) _revealSelected(animate: true);
   }
 
   @override
@@ -903,6 +912,36 @@ class _CmStatusTabsState extends State<CmStatusTabs> {
     final ctx = _keys[i].currentContext;
     if (ctx != null) Scrollable.ensureVisible(ctx, duration: cmDuration(context, CmMotion.base), curve: CmMotion.standard, alignment: 0.5);
     if (widget.tabs[i].value != widget.value) widget.onChanged(widget.tabs[i].value);
+  }
+
+  /// Scrolls the selected tab into view when it is cut off, without moving focus: on the first frame (at once)
+  /// and when the parent changes [CmStatusTabs.value]. Matches the web tabs' scrollIntoView (inline nearest).
+  void _revealSelected({required bool animate}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final sel = widget.tabs.indexWhere((t) => t.value == widget.value);
+      if (sel < 0 || sel >= _keys.length) return;
+      final ctx = _keys[sel].currentContext;
+      final box = ctx?.findRenderObject() as RenderBox?;
+      final view = _scroll.position.context.notificationContext?.findRenderObject() as RenderBox?;
+      if (ctx == null || box == null || view == null || !box.hasSize || !view.hasSize) return;
+      final left = box.localToGlobal(Offset.zero, ancestor: view).dx;
+      if (left >= -0.5 && left + box.size.width <= view.size.width + 0.5) return;
+      Scrollable.ensureVisible(ctx, alignment: 0.5, duration: animate ? cmDuration(context, CmMotion.base) : Duration.zero, curve: CmMotion.standard);
+    });
+  }
+
+  /// The width of [label] in semibold, so every label can reserve the room the selected weight needs.
+  double _semiboldWidth(BuildContext context, String label, TextStyle style) {
+    final p = TextPainter(
+      text: TextSpan(text: label, style: DefaultTextStyle.of(context).style.merge(style.copyWith(fontWeight: FontWeight.w600))),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final w = p.width;
+    p.dispose();
+    return w;
   }
 
   KeyEventResult _onKey(int i, KeyEvent e) {
@@ -975,11 +1014,12 @@ class _CmStatusTabsState extends State<CmStatusTabs> {
                         ? BoxDecoration(border: Border.all(color: c.borderStrong, width: 2), borderRadius: BorderRadius.circular(CmRadius.xs))
                         : null,
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      // The chosen tab's semibold label takes no extra room: each label reserves its semibold width.
-                      Stack(alignment: AlignmentDirectional.centerStart, children: [
-                        Opacity(opacity: 0, child: Text(t.label, style: labelStyle.copyWith(fontWeight: FontWeight.w600))),
-                        label,
-                      ]),
+                      // The chosen tab's semibold label takes no extra room: each label reserves its semibold width,
+                      // measured rather than drawn so the label is a single Text in the tree.
+                      ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: _semiboldWidth(context, t.label, labelStyle)),
+                        child: Align(alignment: AlignmentDirectional.centerStart, widthFactor: 1, heightFactor: 1, child: label),
+                      ),
                       if (t.count != null) ...[
                         SizedBox(width: small ? CmSpace.s4 : CmSpace.s8),
                         Container(
@@ -1002,7 +1042,7 @@ class _CmStatusTabsState extends State<CmStatusTabs> {
         }),
       ],
     ]);
-    Widget strip = SingleChildScrollView(controller: _scroll, scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 2), child: row);
+    Widget strip = SingleChildScrollView(key: _stripKey, controller: _scroll, scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 2), child: row);
     if (_moreStart || _moreEnd) {
       // The fade is a mask of opacity, not a colour, so it works on any background and theme.
       final rtl = Directionality.of(context) == TextDirection.rtl;
