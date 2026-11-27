@@ -150,6 +150,7 @@ class _DateBox extends StatelessWidget {
                 helperText: hasError ? null : helpText,
                 helperStyle: CmType.bodyXs.copyWith(color: c.textTertiary),
                 helperMaxLines: 3,
+                errorMaxLines: 3,
               ),
               child: content ?? Text(text ?? '', style: cmFieldText(context).copyWith(color: enabled ? c.textDefault : c.textSecondary)),
             ),
@@ -1709,6 +1710,8 @@ class _CmComboboxState<T extends Object> extends State<CmCombobox<T>> {
               errorStyle: CmType.bodyXs.copyWith(color: c.textCritical),
               helperText: hasError ? null : widget.helpText,
               helperStyle: CmType.bodyXs.copyWith(color: c.textTertiary),
+              helperMaxLines: 3,
+              errorMaxLines: 3,
             ),
             child: Wrap(
               spacing: CmSpace.s4,

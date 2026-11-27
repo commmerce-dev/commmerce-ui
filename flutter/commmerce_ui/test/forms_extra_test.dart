@@ -186,4 +186,44 @@ void main() {
     expect(cmFileAccepted(const CmPickedFile(name: 'photo.webp', size: 1), ['image/*']), isTrue);
     expect(cmFileAccepted(const CmPickedFile(name: 'doc.pdf', size: 1, mimeType: 'application/pdf'), ['image/*']), isFalse);
   });
+
+  const longLabel = 'A very long option label that is far wider than the box (fast, low cost) (recommended)';
+  const longHelp = 'Pick the model the assistant uses. Faster models cost less per reply. You can change this later in settings.';
+
+  testWidgets('select: a long chosen value stays on one line and ends in an ellipsis', (t) async {
+    await t.pumpWidget(app(SizedBox(
+      width: 200,
+      child: CmSelect<String>(label: 'Model', options: const [CmSelectOption('a', longLabel)], value: 'a', onChanged: (_) {}),
+    )));
+    final text = t.widget<Text>(find.text(longLabel).first);
+    expect(text.maxLines, 1);
+    expect(text.overflow, TextOverflow.ellipsis);
+    final p = t.renderObject<RenderParagraph>(find.text(longLabel).first);
+    expect(p.didExceedMaxLines, isTrue);
+    expect(t.takeException(), isNull);
+  });
+
+  testWidgets('select: help text wraps instead of being cut to one line', (t) async {
+    await t.pumpWidget(app(SizedBox(
+      width: 240,
+      child: CmSelect<String>(label: 'Model', options: const [CmSelectOption('a', 'A')], value: 'a', helpText: longHelp, onChanged: (_) {}),
+    )));
+    expect(t.getSize(find.text(longHelp)).height, greaterThan(16));
+  });
+
+  testWidgets('select: error text wraps instead of being cut to one line', (t) async {
+    await t.pumpWidget(app(SizedBox(
+      width: 240,
+      child: CmSelect<String>(label: 'Model', options: const [CmSelectOption('a', 'A')], value: 'a', error: longHelp, onChanged: (_) {}),
+    )));
+    expect(t.getSize(find.text(longHelp)).height, greaterThan(16));
+  });
+
+  testWidgets('combobox: help text wraps instead of being cut to one line', (t) async {
+    await t.pumpWidget(app(SizedBox(
+      width: 240,
+      child: CmCombobox<String>(label: 'Model', options: const [CmSelectOption('a', 'A')], helpText: longHelp),
+    )));
+    expect(t.getSize(find.text(longHelp)).height, greaterThan(16));
+  });
 }
