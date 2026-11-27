@@ -226,4 +226,19 @@ void main() {
     )));
     expect(t.getSize(find.text(longHelp)).height, greaterThan(16));
   });
+
+  testWidgets('toggle: a long label wraps in a narrow box instead of overflowing', (t) async {
+    const label = 'Send an automatic reply when the shop is closed';
+    await t.pumpWidget(app(SizedBox(width: 150, child: CmToggle(value: false, onChanged: (_) {}, label: label))));
+    expect(t.takeException(), isNull);
+    expect(t.getSize(find.text(label)).height, greaterThan(20));
+    // The track stays next to the first line.
+    expect(t.getTopLeft(find.byType(AnimatedContainer)).dy, t.getTopLeft(find.text(label)).dy);
+  });
+
+  testWidgets('toggle: description shows under the label', (t) async {
+    await t.pumpWidget(app(SizedBox(width: 300, child: CmToggle(value: true, onChanged: (_) {}, label: 'Auto-reply', description: 'Sent outside opening hours'))));
+    expect(t.takeException(), isNull);
+    expect(t.getTopLeft(find.text('Sent outside opening hours')).dy, greaterThan(t.getTopLeft(find.text('Auto-reply')).dy));
+  });
 }
