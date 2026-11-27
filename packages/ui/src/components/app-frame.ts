@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { base, define } from '../base.js';
+import { lockScroll, unlockScroll } from '../overlay.js';
 
 /** Frames at least this wide show the side navigation; narrower ones show the bottom navigation. */
 const WIDE = 1024;
@@ -68,6 +69,7 @@ export class CmAppFrame extends LitElement {
   _wide = false;
   #ro?: ResizeObserver;
   #returnFocus: HTMLElement | null = null;
+  #locked = false;
 
   static styles = [
     base,
@@ -114,6 +116,7 @@ export class CmAppFrame extends LitElement {
     // Pick the layout before the first render, so a wide frame never flashes the narrow one.
     const w = this.getBoundingClientRect().width;
     if (w > 0) this._wide = w >= WIDE;
+    if (this.hasUpdated) this.#syncLock(); // moved back into the page with the menu still open
   }
 
   disconnectedCallback() {
@@ -122,6 +125,7 @@ export class CmAppFrame extends LitElement {
     this.removeEventListener('keydown', this.#onKey);
     this.#ro?.disconnect();
     this.#ro = undefined;
+    if (this.#locked) { unlockScroll(); this.#locked = false; }
   }
 
   /** True while the frame is 1024px wide or more and shows the side navigation instead of the bottom navigation. */
@@ -155,6 +159,23 @@ export class CmAppFrame extends LitElement {
   updated(changed: Map<string, unknown>) {
     if (changed.has('_wide')) this.#heights();
     if (changed.has('menuOpen') || changed.has('menuItem')) this.#syncBottom();
+    this.#syncLock();
+  }
+
+  /** True while the mobile menu covers the page: open, narrow, and a menu is slotted. */
+  #covered() {
+    return this.menuOpen && !this._wide && !!this.querySelector(':scope > [slot="mobile-menu"]');
+  }
+
+  /**
+   * Stops the page behind the mobile menu from scrolling while the menu covers it, with the shared overlay lock (counted,
+   * keeps a classic scrollbar's gutter so nothing jumps sideways). Released when the menu closes, the frame widens or
+   * the frame leaves the page.
+   */
+  #syncLock() {
+    const covered = this.isConnected && this.#covered();
+    if (covered && !this.#locked) { lockScroll(); this.#locked = true; }
+    else if (!covered && this.#locked) { unlockScroll(); this.#locked = false; }
   }
 
   /** Tells the bottom navigation which item opens the menu and whether it is open, so that item shows as current. */
@@ -213,7 +234,7 @@ export class CmAppFrame extends LitElement {
   render() {
     const wide = this._wide;
     // While the menu covers the page, the page and header can't be reached behind it; the bottom bar can.
-    const covered = this.menuOpen && !wide && !!this.querySelector(':scope > [slot="mobile-menu"]');
+    const covered = this.#covered();
     return html`<div class="frame ${wide ? 'wide' : ''}" part="frame">
       <div class="probe"></div>
       <div class="header" part="header" ?inert=${covered}><slot name="header"></slot></div>

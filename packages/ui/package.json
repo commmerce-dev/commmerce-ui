@@ -1,6 +1,6 @@
 {
   "name": "@commmerce/ui",
-  "version": "1.21.1",
+  "version": "1.21.2",
   "description": "Commmerce UI web components: build apps that feel native to the Commmerce admin. Works in plain HTML, React, Vue and server-rendered pages.",
   "keywords": [
     "web-components",
@@ -128,8 +128,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@commmerce/icons": "1.21.1",
-    "@commmerce/tokens": "1.21.1",
+    "@commmerce/icons": "1.21.2",
+    "@commmerce/tokens": "1.21.2",
     "lit": "3.2.1"
   },
   "devDependencies": {

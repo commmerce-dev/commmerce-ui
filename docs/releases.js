@@ -1,6 +1,10 @@
 // Release notes, newest first. Cloud build sessions add an entry here when a batch ships
 // (an <h2 id="vX-Y-Z"> heading and a list). Plain HTML; internal links use href="#/path".
 export const releaseNotes = `
+  <h2 id="v1-21-2">v1.21.2</h2>
+  <ul>
+    <li><a href="#/components/app-frame">App frame</a>: while the <a href="#/components/mobile-menu">mobile menu</a> is open, the page behind it no longer scrolls, the same lock modals and sheets use. Before, scrolling past the end of the menu could move the page underneath, and where scrollbars are always shown (a narrow desktop window on Windows, or a Mac set to always show them) the page's scrollbar showed beside the menu. The page keeps its place and width when the menu closes. The lock is released when the menu closes, when the frame widens to 1024px or more, or when the frame is removed.</li>
+  </ul>
   <h2 id="v1-21-1">v1.21.1</h2>
   <ul>
     <li>Fix: status text meets WCAG AA (4.5:1) on the soft status fills, also when they sit on grey backgrounds (page, inset, hover). In light mode <code>text-success</code>, <code>text-information</code>, <code>text-attention</code> and <code>text-tertiary</code> are slightly darker, with the same hues. Dark mode is unchanged. Flutter's <code>CmColors</code> has the same values.</li>

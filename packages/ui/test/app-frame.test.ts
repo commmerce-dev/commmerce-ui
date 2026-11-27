@@ -132,6 +132,7 @@ describe('cm-app-frame at 1440px', () => {
 
   it('ignores menu-open on a wide frame', async () => {
     const el = await mount(markup('menu-open'));
+    expect(document.documentElement.style.overflow).toBe(''); // no scroll lock either
     expect(visible(el.querySelector('cm-mobile-menu')!)).toBe(false);
     expect(shadow(el, 'main').inert).toBe(false);
   });
@@ -241,6 +242,40 @@ describe('cm-app-frame at 390px', () => {
     (bottomNav(el).shadowRoot!.querySelector('a[href="#orders"]') as HTMLElement).click();
     await el.updateComplete;
     expect(el.menuOpen).toBe(false);
+  });
+
+  it('stops the page behind the open mobile menu from scrolling, and lets it scroll again when the menu closes', async () => {
+    const el = await mount(markup('menu-item="more"'));
+    const root = document.documentElement;
+    scrollTo(0, 300); await frames();
+    expect(Math.round(scrollY)).toBe(300);
+    el.openMenu(); await el.updateComplete; await frames();
+    // Locked: wheel, touch and keys can't scroll the page (overflow: hidden; scripts still can, so don't test with scrollBy).
+    expect(getComputedStyle(root).overflowY).toBe('hidden');
+    expect(Math.round(scrollY)).toBe(300); // locking doesn't move the page
+    el.closeMenu(); await el.updateComplete; await frames();
+    expect(root.style.overflow).toBe('');
+    expect(Math.round(scrollY)).toBe(300); // nothing jumps when it unlocks
+    scrollBy(0, 200); await frames();
+    expect(Math.round(scrollY)).toBe(500);
+  });
+
+  it('releases the scroll lock when the frame widens past 1024px or leaves the page, and relocks when it narrows', async () => {
+    const el = await mount(markup('menu-open'));
+    const root = document.documentElement;
+    expect(root.style.overflow).toBe('hidden');
+    await page.viewport(1024, 800); await frames(3); await el.updateComplete;
+    expect(el.wide).toBe(true);
+    expect(root.style.overflow).toBe(''); // the menu isn't shown on a wide frame, so the page scrolls
+    await page.viewport(390, 844); await frames(3); await el.updateComplete;
+    expect(root.style.overflow).toBe('hidden');
+    el.remove();
+    expect(root.style.overflow).toBe('');
+  });
+
+  it('does not lock the page without a mobile menu', async () => {
+    await mount(markup('menu-open').replace(/<cm-mobile-menu[\s\S]*<\/cm-mobile-menu>/, ''));
+    expect(document.documentElement.style.overflow).toBe('');
   });
 
   it('switches layout when the window crosses 1024px', async () => {

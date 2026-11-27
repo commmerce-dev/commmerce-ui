@@ -1,7 +1,7 @@
 name: commmerce_ui
 description: "Commmerce UI for Flutter: tokens, theme, icons and widgets that match the Commmerce admin, for web, desktop, mobile and tablet."
 publish_to: none
-version: 1.21.1
+version: 1.21.2
 homepage: https://commmerce.com/commmerceui/
 
 environment:
