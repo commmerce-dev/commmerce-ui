@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import '@commmerce/tokens/tokens.css';
 import '../src/index.js';
+import { userEvent } from 'vitest/browser';
 
 // 1.11: the opt-in refined look (data-cm-look="refined"). The default look must not change.
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
@@ -68,7 +69,10 @@ describe('refined look (1.11)', () => {
 
 describe('1.19 additions', () => {
   it('tertiary button: no fill and no outline until hovered', async () => {
-    await mount('<cm-button variant="tertiary" icon="bell" icon-only label="Notifications"></cm-button><cm-button>Plain</cm-button>');
+    await mount('<cm-button variant="tertiary" icon="bell" icon-only label="Notifications"></cm-button><cm-button>Plain</cm-button><p id="away" style="margin-top: 200px">away</p>');
+    // Earlier test files leave the real pointer wherever they last moved it; park it off the buttons so :hover can't apply.
+    await userEvent.hover(document.getElementById('away')!);
+    await nextFrame();
     const [t, s] = [...document.querySelectorAll('cm-button')].map((b) => getComputedStyle(b.shadowRoot!.querySelector('.btn')!));
     expect(t.backgroundColor).toBe('rgba(0, 0, 0, 0)');
     expect(t.borderTopColor).toBe('rgba(0, 0, 0, 0)');
