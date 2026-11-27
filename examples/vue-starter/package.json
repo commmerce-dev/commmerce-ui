@@ -10,8 +10,8 @@
     "test": "vite build && playwright test"
   },
   "dependencies": {
-    "@commmerce/tokens": "1.21.1",
-    "@commmerce/ui": "1.21.1",
+    "@commmerce/tokens": "1.21.2",
+    "@commmerce/ui": "1.21.2",
     "vue": "3.5.44"
   },
   "devDependencies": {
