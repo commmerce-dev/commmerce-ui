@@ -190,8 +190,11 @@ enum CmCardVariant {
 ///
 /// With [onPressed] the card is interactive (web `variant="interactive"`): the whole card is one button, with hover
 /// (darker outline, tinted), pressed, focus (a 2px ring outside the card) and [selected] (a 2px dark outline)
-/// states. Its accessible name is the [heading] (or [semanticLabel]). Header [actions] stay separately pressable;
-/// don't put other controls in the body of an interactive card.
+/// states. Its accessible name is the [heading] (or [semanticLabel]). Header [actions] and controls in the body stay
+/// separately pressable and reachable by screen readers.
+///
+/// The content sits on a transparent [Material], so ink widgets such as [ListTile] and [InkWell] work inside the
+/// card without a Scaffold above it.
 class CmCard extends StatefulWidget {
   const CmCard({
     super.key,
@@ -282,14 +285,15 @@ class _CmCardState extends State<CmCard> {
             child: CmHeaderWrap(
               minLeadWidth: _strut(context, headingStyle),
               gap: CmSpace.s16,
-              lead: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              // An interactive card is already named by its heading, so the heading and description aren't read twice.
+              lead: ExcludeSemantics(excluding: w.interactive, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 if (w.heading != null)
                   Semantics(header: true, child: Wrap(spacing: CmSpace.s8, runSpacing: CmSpace.s8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                     Text(w.heading!, style: w.interactive && _hover ? headingStyle.copyWith(decoration: TextDecoration.underline) : headingStyle),
                     ?w.adornment,
                   ])),
                 if (w.description != null) Padding(padding: const EdgeInsets.only(top: CmSpace.s4), child: Text(w.description!, style: CmType.bodySm.copyWith(color: c.textTertiary))),
-              ]),
+              ])),
               trailing: w.actions.isEmpty ? const SizedBox.shrink() : Wrap(spacing: CmSpace.s8, runSpacing: CmSpace.s8, crossAxisAlignment: WrapCrossAlignment.center, children: w.actions),
             ),
           );
@@ -319,13 +323,16 @@ class _CmCardState extends State<CmCard> {
         borderRadius: BorderRadius.circular(CmRadius.md),
         boxShadow: interactive && _focus ? [BoxShadow(color: c.bgPage, spreadRadius: 2), BoxShadow(color: c.borderStrong, spreadRadius: 4)] : null,
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [?head, w.child]),
+      // A transparent Material, so ink widgets in the card (ListTile, InkWell) work without a Scaffold above it.
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [?head, w.child]),
+      ),
     );
     if (!interactive) return card;
     return Semantics(
       container: true,
       explicitChildNodes: true,
-      excludeSemantics: w.actions.isEmpty,
       button: true,
       selected: w.selected,
       label: w.heading ?? w.semanticLabel,
