@@ -105,10 +105,11 @@ class _BottomItemState extends State<_BottomItem> {
 
 /// A row of links between sibling pages, such as the sections of Settings or the parts of a product.
 /// Looks like status tabs, but each tab is its own page; the current one is black and underlined.
-/// Too many tabs for the width scroll sideways. Mirrors `<cm-link-tabs>`.
+/// Too many tabs for the width scroll sideways, and the current tab is scrolled into view when the
+/// row first shows and whenever [selectedId] changes. Mirrors `<cm-link-tabs>`.
 ///
 /// To filter one list without leaving the page, use [CmStatusTabs] instead.
-class CmLinkTabs extends StatelessWidget {
+class CmLinkTabs extends StatefulWidget {
   const CmLinkTabs({super.key, required this.tabs, required this.selectedId, required this.onSelected, this.semanticLabel = 'Sections'});
 
   /// Tabs; [CmNavItem.count] shows in brackets after the label.
@@ -122,13 +123,48 @@ class CmLinkTabs extends StatelessWidget {
   final String semanticLabel;
 
   @override
+  State<CmLinkTabs> createState() => _CmLinkTabsState();
+}
+
+class _CmLinkTabsState extends State<CmLinkTabs> {
+  // One key per tab id, so a tab keeps its own state when the selection moves.
+  final _keys = <String, GlobalKey>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _revealCurrent(animate: false);
+  }
+
+  @override
+  void didUpdateWidget(CmLinkTabs old) {
+    super.didUpdateWidget(old);
+    if (old.selectedId != widget.selectedId) _revealCurrent(animate: true);
+  }
+
+  /// Centres the current tab in the row after the next layout (instantly on first build).
+  void _revealCurrent({required bool animate}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _keys[widget.selectedId]?.currentContext;
+      if (!mounted || ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.5,
+        duration: animate ? cmDuration(context, CmMotion.base) : Duration.zero,
+        curve: CmMotion.standard,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = CmTheme.colorsOf(context);
     final phone = CmBreakpoints.of(context) == CmScreen.phone;
+    final tabs = widget.tabs;
     return Semantics(
       container: true,
       explicitChildNodes: true,
-      label: semanticLabel,
+      label: widget.semanticLabel,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.borderSubtle))),
@@ -138,7 +174,13 @@ class CmLinkTabs extends StatelessWidget {
           child: Row(children: [
             for (var i = 0; i < tabs.length; i++) ...[
               if (i > 0) SizedBox(width: phone ? 18 : 28),
-              _LinkTab(tab: tabs[i], current: tabs[i].id == selectedId, phone: phone, onTap: () => onSelected(tabs[i])),
+              _LinkTab(
+                key: _keys.putIfAbsent(tabs[i].id, GlobalKey.new),
+                tab: tabs[i],
+                current: tabs[i].id == widget.selectedId,
+                phone: phone,
+                onTap: () => widget.onSelected(tabs[i]),
+              ),
             ],
           ]),
         ),
@@ -148,7 +190,7 @@ class CmLinkTabs extends StatelessWidget {
 }
 
 class _LinkTab extends StatefulWidget {
-  const _LinkTab({required this.tab, required this.current, required this.phone, required this.onTap});
+  const _LinkTab({super.key, required this.tab, required this.current, required this.phone, required this.onTap});
   final CmNavItem tab;
   final bool current, phone;
   final VoidCallback onTap;
