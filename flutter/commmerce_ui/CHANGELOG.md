@@ -3,6 +3,10 @@
 The Flutter package shares its version number with the Commmerce UI web packages. Full release notes:
 https://commmerce.com/blog/commmerceui/#releases
 
+## 1.21.3
+
+* No Flutter changes.
+
 ## 1.21.2
 
 * No Flutter changes (web: the app frame locks page scrolling while the mobile menu is open).

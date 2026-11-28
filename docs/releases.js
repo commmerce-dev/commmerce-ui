@@ -1,6 +1,59 @@
 // Release notes, newest first. Cloud build sessions add an entry here when a batch ships
 // (an <h2 id="vX-Y-Z"> heading and a list). Plain HTML; internal links use href="#/path".
 export const releaseNotes = `
+  <h2 id="v1-21-3">v1.21.3</h2>
+  <ul>
+    <li>Fix: CmTheme.light() and CmTheme.dark() built a Material 3 ColorScheme with only a few slots set. Flutter filled in the rest itself, so stock Material widgets drew colours that aren't in the design system. For example, a selected ChoiceChip or SegmentedButton used Material's default blue-ish secondaryContainer, surfaces picked up a Material surface tint, and the container, inverse and scrim slots fell back to Material's own colours. CmTheme._build now sets every M3 ColorScheme slot from a Commmerce token:
+- primary/secondaryContainer → bgSelected, with textDefault on top
+- tertiary → textInformation, with bgSurface on top
+- tertiaryContainer → bgInformationSoft
+- errorContainer → bgCritical, with textCritical on top
+- surfaceDim → bgPage; surfaceBright → bgSurface
+- surfaceContainerLowest/Low/(default)/High/Highest → bgSurface/bgPage/bgInset/bgHover/bgHover
+- inverseSurface → textDefault, with bgSurface on top; inversePrimary → actionPrimaryText
+- shadow → black; scrim → overlay; surfaceTint → transparent
+
+The slots that were already set keep their values. Commmerce's own widgets don't read colorScheme, so only stock Material widgets used inside apps look different.</li>
+    <li>Fix: CmCard (Flutter) had two problems.
+
+1. Ink widgets inside a card, such as ListTile and InkWell, threw "No Material widget found" when nothing above the card provided a Material (no Scaffold, for example). The card now puts its content on a transparent `Material` inside the decorated container, so ink draws on the card's surface. The card looks the same.
+
+2. An interactive card (`CmCard.interactive`) with no header actions set `excludeSemantics`, which hid every control in its body from screen readers. That flag is removed. The card stays one container button named by its heading or `semanticLabel`. Body controls are now separate nodes that screen readers can reach. So the name isn't read twice, only the heading and description text is excluded from semantics on interactive cards. The doc comment now says this and mentions the Material surface.</li>
+    <li>Fix: The Flutter `CmBottomSheet` didn't move up for the on-screen keyboard. `showCmBottomSheet` opens it with `showGeneralDialog`, which doesn't account for the keyboard. The sheet only used the safe-area bottom padding, so it stayed at the bottom of the screen and any text field in it was hidden behind the keyboard.
+
+What changed in `CmBottomSheet.build`:
+- The sheet now has bottom padding equal to the keyboard height (`MediaQuery.viewInsetsOf(context).bottom`), so it sits on top of the keyboard.
+- The panel's maximum height now also subtracts the keyboard height. When the content doesn't fit, it scrolls inside the sheet instead of running off the top of the screen.
+- The safe-area bottom inset is only applied when the keyboard is closed, because the keyboard already covers that area. The 20px minimum padding stays.
+- The class documentation now describes this behaviour.
+
+Nothing changes when the keyboard is closed.</li>
+    <li>Fix: CmStatusTabs (Flutter) had two problems.
+
+1. Each tab drew a hidden semibold copy of its label (an `Opacity(0)` Text in a Stack) so that the label keeps the same width when the tab is selected. Because of that copy, `find.text('Open')` found two widgets, so app tests had to use `.last`. The label is now a single Text. The semibold width is measured with a TextPainter (same style, ambient text scaler and direction) and kept as a minimum width with `ConstrainedBox`. Selecting a tab still doesn't move the tabs after it.
+
+2. A tab selected from outside (the initial `value`, or a parent changing `value`) was not scrolled into view in a row too wide for its box. Now the selected tab is scrolled into view (centred), only if it is cut off and without moving focus: at once on the first frame, and with the standard motion duration when `value` changes. This matches the web status tabs. While fixing this I found that the scroll offset was being reset when the edge fade first wrapped the scroll view in a ShaderMask (the subtree was rebuilt). The scroll view now has a GlobalKey so it keeps its offset.</li>
+    <li>Fix: Flutter `CmLinkTabs` put its tabs in a horizontal `SingleChildScrollView`, but nothing ever scrolled that row. When the tabs were wider than the screen and the current tab was far along the row, it stayed off screen. The web `&amp;lt;cm-link-tabs&amp;gt;` already scrolls the current tab into view (since 1.20.1).
+
+`CmLinkTabs` is now a `StatefulWidget`. Each tab has its own `GlobalKey`, keyed by tab id, so a tab keeps its own state when the selection moves. After the first frame, and whenever `selectedId` changes, the widget calls `Scrollable.ensureVisible(alignment: 0.5)` to centre the current tab. On first build it jumps there; on a change it animates with the `CmMotion.base` duration and the `CmMotion.standard` curve. The public API and how the tabs look are unchanged. The class doc comment now describes this behaviour.</li>
+    <li>Fix: Flutter CmSelect had two text-truncation problems.
+
+1. A long selected value wrapped and got clipped. Unless the options were grouped or `showGroup` was set, the closed field reused the menu item's `Text`, which has no `maxLines`. A long value wrapped onto a second line inside the 24px dense button, and the second line was cut off. The field now always uses `selectedItemBuilder`, and the value shows on one line (`maxLines: 1`, `softWrap: false`) ending in an ellipsis. Menu items and item heights are unchanged.
+
+2. Help and error text was cut to one line. CmSelect's `InputDecoration` didn't set `helperMaxLines` or `errorMaxLines`, so Flutter kept them to one line with an ellipsis. They are now set to 3, the same as CmTextField. CmCombobox had the same omission and gets the same fix. The date field already set `helperMaxLines` but not `errorMaxLines`, so it now sets `errorMaxLines: 3` as well, matching CmTextField and CmTimePicker.
+
+Added widget tests in `test/forms_extra_test.dart`: a long CmSelect value renders on one line with an ellipsis, and help or error text wraps in CmSelect and CmCombobox.</li>
+    <li>Fix: Flutter `CmGrid` with `minColumnWidth` always made as many columns as fit, even when there were fewer children than that. A few items then sat in narrow columns with empty slots after them. The web `&amp;lt;cm-grid&amp;gt;` uses `repeat(auto-fit, minmax(...))`, which drops empty tracks so the items share the row. `CmGrid.build` now caps the column count at `children.length` when `minColumnWidth` is set. For example, 4 items in a 1280px grid now get 4 columns of 305 instead of 5 columns of 240 with an empty fifth slot. Grids with a fixed `columns` count are unchanged, since the web's `repeat(n, 1fr)` keeps its empty slots too. `CmGrid.columnsFor` is unchanged. The dartdoc for `minColumnWidth` and `columnsFor` now describes this.</li>
+    <li>Fix: The Flutter `CmToggle` put its label `Text` straight into a `Row` with nothing letting it shrink. In a narrow container, a long label overflowed (RenderFlex overflow) instead of wrapping. The label now sits in a `Flexible` column, so it wraps onto more lines. The row is top-aligned, so the track stays next to the label's first line, the same way `CmCheckbox` lays out. Single-line toggles look the same as before, because the label line height (20) equals the track height. To match the web `&amp;lt;cm-toggle&amp;gt;`, `CmToggle` also gets an optional `description`. It is drawn under the label in `bodyXs` / `textTertiary`, like `CmCheckbox`, and is given to screen readers as the semantics hint.</li>
+    <li>The Flutter `CmToggle` put its label `Text` straight into a `Row` with nothing letting it (#16)</li>
+    <li>Flutter `CmGrid` with `minColumnWidth` always made as many columns as fit, even when there (#15)</li>
+    <li>Flutter CmSelect had two text-truncation problems. (#14)</li>
+    <li>Flutter `CmLinkTabs` put its tabs in a horizontal `SingleChildScrollView`, but nothing eve (#13)</li>
+    <li>CmStatusTabs (Flutter) had two problems. (#12)</li>
+    <li>The Flutter `CmBottomSheet` didn't move up for the on-screen keyboard. `showCmBottomSheet` (#11)</li>
+    <li>CmCard (Flutter) had two problems. (#10)</li>
+    <li>CmTheme.light() and CmTheme.dark() built a Material 3 ColorScheme with only a few slots se (#9)</li>
+  </ul>
   <h2 id="v1-21-2">v1.21.2</h2>
   <ul>
     <li><a href="#/components/app-frame">App frame</a>: while the <a href="#/components/mobile-menu">mobile menu</a> is open, the page behind it no longer scrolls, the same lock modals and sheets use. Before, scrolling past the end of the menu could move the page underneath, and where scrollbars are always shown (a narrow desktop window on Windows, or a Mac set to always show them) the page's scrollbar showed beside the menu. The page keeps its place and width when the menu closes. The lock is released when the menu closes, when the frame widens to 1024px or more, or when the frame is removed.</li>
