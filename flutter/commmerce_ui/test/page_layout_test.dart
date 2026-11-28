@@ -90,21 +90,6 @@ void main() {
       expect(CmGrid.columnsFor(500, minColumnWidth: 240), 2);
       expect(CmGrid.columnsFor(500, columns: 4), 1, reason: 'fixed columns collapse below 641');
     });
-
-    testWidgets('auto-fit drops empty columns: fewer items than fit share the row (like CSS auto-fit)', (t) async {
-      final four = items.take(4).toList();
-      await pumpAt(t, 1280, CmGrid(minColumnWidth: 240, gap: CmSpace.s20, children: four));
-      // Five columns would fit, but only four items: four columns of (1280 - 3 x 20) / 4 = 305.
-      for (var i = 1; i <= 4; i++) {
-        expect(rectOf(t, 'tile $i').width, closeTo(305, 0.01), reason: 'tile $i');
-        expect(rectOf(t, 'tile $i').top, rectOf(t, 'tile 1').top, reason: 'one row');
-      }
-      expect(rectOf(t, 'tile 4').right, closeTo(1280, 0.01), reason: 'no empty fifth slot');
-      expect(CmGrid.columnsFor(1280, minColumnWidth: 240), 5);
-      // Fixed columns keep their empty slots, as the web grid's repeat(n, 1fr) does.
-      await pumpAt(t, 1000, CmGrid(columns: 3, children: items.take(2).toList()));
-      expect(rectOf(t, 'tile 1').width, closeTo(320, 0.01));
-    });
   });
 
   group('stack', () {

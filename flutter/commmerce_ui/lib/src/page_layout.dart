@@ -86,14 +86,12 @@ class CmGrid extends StatelessWidget {
   final int columns;
 
   /// Fit as many columns as there is room for, each at least this wide (never wider than the grid).
-  /// With fewer items than that, the items share the row (like CSS `auto-fit`): no empty columns.
   final double? minColumnWidth;
 
   /// Space between items, across and down: use a [CmSpace] token.
   final double gap;
 
-  /// How many columns fit in a grid [width] pixels wide. With [minColumnWidth], a grid with fewer
-  /// children than this shows one column per child.
+  /// How many columns a grid [width] pixels wide shows.
   static int columnsFor(double width, {int columns = 2, double? minColumnWidth, double gap = CmSpace.s20}) {
     if (!width.isFinite) return 1;
     if (minColumnWidth != null) {
@@ -109,9 +107,7 @@ class CmGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, box) {
-      var n = columnsFor(box.maxWidth, columns: columns, minColumnWidth: minColumnWidth, gap: gap);
-      // Like CSS auto-fit, a fitted grid drops the columns no item fills, so fewer items share the row.
-      if (minColumnWidth != null && children.isNotEmpty) n = math.min(n, children.length);
+      final n = columnsFor(box.maxWidth, columns: columns, minColumnWidth: minColumnWidth, gap: gap);
       if (n == 1) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, spacing: gap, children: children);
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, spacing: gap, children: [
         for (var start = 0; start < children.length; start += n)
