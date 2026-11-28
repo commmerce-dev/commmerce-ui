@@ -251,15 +251,10 @@ List<Widget> _gap(List<Widget> items, double gap, bool vertical) => [
 
 /// A 38×20 switch for settings that apply at once. Mirrors `<cm-toggle>`.
 class CmToggle extends StatelessWidget {
-  const CmToggle({super.key, required this.value, required this.onChanged, this.label, this.semanticLabel, this.description});
+  const CmToggle({super.key, required this.value, required this.onChanged, this.label, this.semanticLabel});
   final bool value;
   final ValueChanged<bool>? onChanged;
-
-  /// Visible label. Wraps onto more lines when space is short.
   final String? label;
-
-  /// Secondary line under the [label], like `<cm-toggle description>`.
-  final String? description;
 
   /// Accessible name when there is no visible [label].
   final String? semanticLabel;
@@ -285,7 +280,6 @@ class CmToggle extends StatelessWidget {
       toggled: value,
       enabled: enabled,
       label: semanticLabel ?? label,
-      hint: description,
       excludeSemantics: true, onTap: enabled ? () => onChanged!(!value) : null,
       child: FocusableActionDetector(
         enabled: enabled,
@@ -295,18 +289,9 @@ class CmToggle extends StatelessWidget {
           onTap: enabled ? () => onChanged!(!value) : null,
           child: Opacity(
             opacity: enabled ? 1 : 0.5,
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
               track,
-              if (label != null || description != null) ...[
-                const SizedBox(width: CmSpace.s8),
-                Flexible(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                    if (label != null) Text(label!, style: CmType.bodyMd.copyWith(color: c.textDefault)),
-                    if (description != null)
-                      Padding(padding: const EdgeInsets.only(top: 2), child: Text(description!, style: CmType.bodyXs.copyWith(color: c.textTertiary))),
-                  ]),
-                ),
-              ],
+              if (label != null) ...[const SizedBox(width: CmSpace.s8), Text(label!, style: CmType.bodyMd.copyWith(color: c.textDefault))],
             ]),
           ),
         ),
