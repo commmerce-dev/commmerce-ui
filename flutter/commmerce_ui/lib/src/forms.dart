@@ -398,8 +398,7 @@ class CmSelect<T> extends StatelessWidget {
       }
       final text = showGroup && g.isNotEmpty ? s.selectGrouped(g, o.label) : o.label;
       items.add(DropdownMenuItem(value: o.value, child: Text(o.label, style: cmFieldText(context).copyWith(color: c.textDefault))));
-      // One line ending in an ellipsis: the dense field is 24 tall, so a wrapped value would be clipped.
-      shown.add(Align(alignment: AlignmentDirectional.centerStart, child: Text(text, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis, style: cmFieldText(context).copyWith(color: c.textDefault))));
+      shown.add(Align(alignment: AlignmentDirectional.centerStart, child: Text(text, overflow: TextOverflow.ellipsis, style: cmFieldText(context).copyWith(color: c.textDefault))));
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
       _FieldLabel(label: label, small: small),
@@ -407,7 +406,7 @@ class CmSelect<T> extends StatelessWidget {
       DropdownButtonFormField<T>(
         value: value,
         items: items,
-        selectedItemBuilder: (_) => shown,
+        selectedItemBuilder: grouped || showGroup ? (_) => shown : null,
         itemHeight: grouped ? null : kMinInteractiveDimension,
         onChanged: onChanged,
         hint: placeholder == null ? null : Text(placeholder!, style: cmFieldText(context).copyWith(color: c.textTertiary)),
@@ -424,8 +423,6 @@ class CmSelect<T> extends StatelessWidget {
           errorStyle: CmType.bodyXs.copyWith(color: c.textCritical),
           helperText: error == null ? helpText : null,
           helperStyle: CmType.bodyXs.copyWith(color: c.textTertiary),
-          helperMaxLines: 3,
-          errorMaxLines: 3,
         ),
       ),
     ]);
