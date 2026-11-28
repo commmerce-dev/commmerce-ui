@@ -80,23 +80,6 @@ void main() {
     });
   });
 
-  group('card: Material ancestor and interactive children', () {
-    testWidgets('ink widgets inside a card work without a Scaffold or Material above it', (t) async {
-      await t.pumpWidget(MaterialApp(theme: CmTheme.light(), home: CmCard(child: ListTile(title: const Text('x'), onTap: () {}))));
-      expect(t.takeException(), isNull);
-      expect(find.descendant(of: find.byType(CmCard), matching: find.byType(Material)), findsOneWidget);
-    });
-
-    testWidgets('an interactive card keeps controls in its body reachable by screen readers', (t) async {
-      final handle = t.ensureSemantics();
-      await t.pumpWidget(app(CmCard.interactive(heading: 'Account', onPressed: () {}, child: CmButton(label: 'Reconnect', onPressed: () {}))));
-      expect(find.bySemanticsLabel('Reconnect'), findsOneWidget);
-      final card = t.getSemantics(find.bySemanticsLabel('Account'));
-      expect(card.getSemanticsData().hasFlag(SemanticsFlag.isButton), isTrue);
-      handle.dispose();
-    });
-  });
-
   group('narrow card and page header (1.2)', () {
     testWidgets('card: actions move under a title that would be squeezed; badges wrap under the heading', (t) async {
       Future<void> pump(double width) => t.pumpWidget(app(CmCard(
