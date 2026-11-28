@@ -498,27 +498,6 @@ void main() {
       final sheet = find.ancestor(of: find.text('Generate invoice'), matching: find.byType(Material)).first;
       expect(t.getSize(sheet).width, 600 - 40, reason: 'inside 20px padding');
     });
-
-    testWidgets('rises above the on-screen keyboard and scrolls when it does not fit', (t) async {
-      size(t, const Size(390, 844));
-      t.view.viewInsets = const FakeViewPadding(bottom: 300);
-      t.view.padding = const FakeViewPadding(bottom: 34);
-      await t.pumpWidget(app((context) => showCmBottomSheet(
-            context: context,
-            heading: 'Note',
-            items: [for (var i = 0; i < 20; i++) CmMenuItem(label: 'Row $i')],
-            builder: (_) => const CmTextField(label: 'Note'),
-          )));
-      await t.tap(find.text('Open'));
-      await t.pumpAndSettle();
-      expect(t.takeException(), isNull);
-      final sheet = find.ancestor(of: find.text('Row 0'), matching: find.byType(Material)).first;
-      expect(t.getRect(sheet).bottom, 844 - 300 - 20, reason: 'above the keyboard, without the safe-area inset under it');
-      expect(t.getRect(find.byType(CmBottomSheet)).top, greaterThanOrEqualTo(0));
-      expect(t.getRect(find.bySemanticsLabel('Close')).top, greaterThanOrEqualTo(0));
-      await t.scrollUntilVisible(find.byType(CmTextField), 100, scrollable: find.descendant(of: find.byType(CmBottomSheet), matching: find.byType(Scrollable)).first);
-      expect(t.getRect(find.byType(CmTextField)).bottom, lessThanOrEqualTo(844 - 300));
-    });
   });
 
   group('notification panel', () {

@@ -670,8 +670,7 @@ Future<String?> showCmFilterPanel({
 /// shortcuts ("Orders"): white with 20px top corners, a round black close button on its top edge, and 44px
 /// rows split by thin lines. Rows without icons are centred; rows with icons line up at the start and end in
 /// a chevron. At most 600px wide on larger screens. Mirrors `<cm-bottom-sheet>`. Open it with
-/// [showCmBottomSheet]. With the on-screen keyboard open, the sheet sits above it and its content scrolls
-/// when it does not fit.
+/// [showCmBottomSheet].
 class CmBottomSheet extends StatelessWidget {
   const CmBottomSheet({super.key, required this.heading, this.items = const [], this.onSelected, this.child, this.closeLabel = 'Close', this.onClose});
 
@@ -701,14 +700,12 @@ class CmBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = CmTheme.colorsOf(context);
     final screen = MediaQuery.sizeOf(context);
-    // The on-screen keyboard: the sheet rises above it, and the safe-area inset it covers no longer applies.
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final close = _popper(context, onClose);
     final rows = items.where((it) => !it.divider && !it.heading).toList();
     final icons = rows.any((it) => it.icon != null);
     final panel = Container(
-      constraints: BoxConstraints(maxHeight: math.max(0, screen.height - keyboard - 80)),
-      padding: EdgeInsets.fromLTRB(CmSpace.s20, CmSpace.s20, CmSpace.s20, math.max(CmSpace.s20, keyboard > 0 ? 0 : MediaQuery.paddingOf(context).bottom)),
+      constraints: BoxConstraints(maxHeight: math.max(0, screen.height - 80)),
+      padding: EdgeInsets.fromLTRB(CmSpace.s20, CmSpace.s20, CmSpace.s20, math.max(CmSpace.s20, MediaQuery.paddingOf(context).bottom)),
       decoration: BoxDecoration(color: c.bgSurface, borderRadius: const BorderRadius.vertical(top: Radius.circular(CmRadius.lg)), boxShadow: CmShadow.lg),
       child: Material(
         type: MaterialType.transparency,
@@ -730,20 +727,17 @@ class CmBottomSheet extends StatelessWidget {
     return _OverlayScope(
       label: heading,
       onEscape: close,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: keyboard),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: SizedBox(
-            width: math.min(600, screen.width),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              // The close button straddles the top edge; the Stack includes its upper half so it can be tapped.
-              child: Stack(clipBehavior: Clip.none, children: [
-                Padding(padding: const EdgeInsets.only(top: CmSpace.s20), child: panel),
-                Positioned(top: 0, left: 0, right: 0, child: Center(child: _CloseButton(label: closeLabel, onTap: close, round: true))),
-              ]),
-            ),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: SizedBox(
+          width: math.min(600, screen.width),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            // The close button straddles the top edge; the Stack includes its upper half so it can be tapped.
+            child: Stack(clipBehavior: Clip.none, children: [
+              Padding(padding: const EdgeInsets.only(top: CmSpace.s20), child: panel),
+              Positioned(top: 0, left: 0, right: 0, child: Center(child: _CloseButton(label: closeLabel, onTap: close, round: true))),
+            ]),
           ),
         ),
       ),
