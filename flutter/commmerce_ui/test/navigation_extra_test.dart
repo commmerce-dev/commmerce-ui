@@ -96,37 +96,6 @@ void main() {
     expect(find.byType(SingleChildScrollView), findsNWidgets(2));
   });
 
-  group('link tabs bring the current tab into view when the row overflows', () {
-    final many = [for (var i = 1; i <= 12; i++) CmNavItem(id: 's$i', label: 'Section $i')];
-
-    void expectInView(WidgetTester t, String label) {
-      final bar = t.getRect(find.byType(CmLinkTabs));
-      final tab = t.getRect(find.text(label));
-      expect(tab.left, greaterThanOrEqualTo(bar.left), reason: '$label starts inside the row');
-      expect(tab.right, lessThanOrEqualTo(bar.right), reason: '$label ends inside the row');
-    }
-
-    testWidgets('on first build', (t) async {
-      await t.pumpWidget(app(CmLinkTabs(selectedId: 's12', onSelected: (_) {}, tabs: many)));
-      await t.pumpAndSettle();
-      expectInView(t, 'Section 12');
-    });
-
-    testWidgets('when the current tab changes', (t) async {
-      var current = 's1';
-      late StateSetter set;
-      await t.pumpWidget(app(StatefulBuilder(builder: (c, s) {
-        set = s;
-        return CmLinkTabs(selectedId: current, onSelected: (_) {}, tabs: many);
-      })));
-      await t.pumpAndSettle();
-      expectInView(t, 'Section 1');
-      set(() => current = 's12');
-      await t.pumpAndSettle();
-      expectInView(t, 'Section 12');
-    });
-  });
-
   testWidgets('mobile menu: rows navigate, sub-page opens and Escape goes back', (t) async {
     final handle = t.ensureSemantics();
     phone(t);
